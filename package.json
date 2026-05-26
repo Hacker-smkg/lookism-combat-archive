@@ -1,0 +1,9 @@
+{
+  "name": "lookism-combat-archive",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone Lookism-inspired combat archive and fitness system.",
+  "scripts": {
+    "check": "node --check lookism-combat-archive.js && node --check api/coach.js"
+  }
+}
