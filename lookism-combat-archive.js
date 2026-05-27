@@ -326,6 +326,27 @@ const LOCAL_IMAGES = {
   jiho: "./lookism-assets/characters/jiho.webp"
 };
 
+const BACKGROUND_WALL_IMAGES = [
+  "gunUnconscious",
+  "uiDaniel",
+  "gapryong",
+  "shingen",
+  "mujin",
+  "tom",
+  "goo",
+  "dg",
+  "james",
+  "kitae",
+  "seongji",
+  "taesoo",
+  "johan",
+  "pathJohan",
+  "pathDaniel",
+  "masteryEli",
+  "gunCurrent",
+  "danielDual"
+];
+
 const MASTERY_META = {
   strength: {
     label: "Strength",
@@ -2069,6 +2090,7 @@ function icon(name) {
 
 function render() {
   app.innerHTML = `
+    ${renderMangaBackgroundWall()}
     <main class="app-shell">
       ${renderTopNav()}
       <div class="view-frame">
@@ -2078,6 +2100,24 @@ function render() {
     </main>
   `;
   queueWikiLoad();
+}
+
+function renderMangaBackgroundWall() {
+  return `
+    <div class="manga-bg-wall" aria-hidden="true">
+      <div class="manga-bg-grid">
+        ${BACKGROUND_WALL_IMAGES.map((imageKey, index) => {
+          const src = LOCAL_IMAGES[imageKey] || "";
+          const shape = index % 7 === 0 ? "wide" : index % 5 === 0 ? "tall" : index % 4 === 0 ? "large" : "square";
+          return src ? `
+            <span class="manga-bg-tile manga-bg-tile--${shape}" style="--tile-index:${index}">
+              <img src="${src}" alt="" loading="eager" />
+            </span>
+          ` : "";
+        }).join("")}
+      </div>
+    </div>
+  `;
 }
 
 function renderActiveView() {
