@@ -120,8 +120,8 @@ img {
 .manga-bg-wall::before {
   z-index: 2;
   background:
-    linear-gradient(90deg, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.54) 26%, rgba(0, 0, 0, 0.46) 72%, rgba(0, 0, 0, 0.94)),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0.48) 36%, rgba(0, 0, 0, 0.86));
+    linear-gradient(90deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.3) 26%, rgba(0, 0, 0, 0.24) 72%, rgba(0, 0, 0, 0.72)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.28) 36%, rgba(0, 0, 0, 0.62));
 }
 
 .manga-bg-wall::after {
@@ -2164,8 +2164,8 @@ img {
 
   .manga-bg-wall::before {
     background:
-      linear-gradient(90deg, rgba(0, 0, 0, 0.96), rgba(0, 0, 0, 0.62) 34%, rgba(0, 0, 0, 0.94)),
-      linear-gradient(180deg, rgba(0, 0, 0, 0.94), rgba(0, 0, 0, 0.54) 36%, rgba(0, 0, 0, 0.9));
+      linear-gradient(90deg, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.34) 34%, rgba(0, 0, 0, 0.74)),
+      linear-gradient(180deg, rgba(0, 0, 0, 0.74), rgba(0, 0, 0, 0.32) 36%, rgba(0, 0, 0, 0.68));
   }
 
   .web-header {

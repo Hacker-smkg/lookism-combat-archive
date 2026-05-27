@@ -2338,6 +2338,8 @@ function renderSystemDashboard() {
         <div class="orb" aria-hidden="true"></div>
       </header>
 
+      ${renderBackgroundManager()}
+
       <div class="archive-metrics" aria-label="Archive metrics">
         ${metricCard("Level", levelProgress.level, rank.label)}
         ${metricCard("XP", state.totalXp.toLocaleString(), `${levelProgress.next.toLocaleString()} next`)}
@@ -2370,8 +2372,6 @@ function renderSystemDashboard() {
         <p>"${escapeHtml(journey ? `Current diagnosis applied: ${journey.currentCategory}. Clear ${journey.recommendedFighterType}, ${journey.recommendedMastery}, and ${journey.recommendedArt} quests to climb toward ${journey.nextCategory}.` : "Start as Weak Daniel. Earn XP through clean reps, recovery, roadwork, and martial precision. The app rewards consistency before intensity.")}"</p>
         <div class="tiny">Fiction-inspired training · progressive overload · not medical advice</div>
       </article>
-
-      ${renderBackgroundManager()}
 
       ${journey ? renderAppliedJourney(journey) : renderNoJourneyPrompt()}
 
