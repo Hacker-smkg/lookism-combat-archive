@@ -326,26 +326,14 @@ const LOCAL_IMAGES = {
   jiho: "./lookism-assets/characters/jiho.webp"
 };
 
-const BACKGROUND_WALL_IMAGES = [
-  "gunUnconscious",
-  "uiDaniel",
-  "gapryong",
-  "shingen",
-  "mujin",
-  "tom",
-  "goo",
-  "dg",
-  "james",
-  "kitae",
-  "seongji",
-  "taesoo",
-  "johan",
-  "pathJohan",
-  "pathDaniel",
-  "masteryEli",
-  "gunCurrent",
-  "danielDual"
-];
+const BACKGROUND_WALL_EXTENSIONS = ["webp", "jpg", "jpeg", "png"];
+const BACKGROUND_WALL_IMAGES = Array.from({ length: 17 }, (_, index) => {
+  const id = String(index + 1).padStart(2, "0");
+  return {
+    base: `./lookism-assets/backgrounds/lookism-bg-${id}`,
+    label: `Lookism background ${id}`
+  };
+});
 
 const MASTERY_META = {
   strength: {
@@ -2106,18 +2094,29 @@ function renderMangaBackgroundWall() {
   return `
     <div class="manga-bg-wall" aria-hidden="true">
       <div class="manga-bg-grid">
-        ${BACKGROUND_WALL_IMAGES.map((imageKey, index) => {
-          const src = LOCAL_IMAGES[imageKey] || "";
+        ${BACKGROUND_WALL_IMAGES.map((image, index) => {
+          const src = `${image.base}.${BACKGROUND_WALL_EXTENSIONS[0]}`;
           const shape = index % 7 === 0 ? "wide" : index % 5 === 0 ? "tall" : index % 4 === 0 ? "large" : "square";
-          return src ? `
+          return `
             <span class="manga-bg-tile manga-bg-tile--${shape}" style="--tile-index:${index}">
-              <img src="${src}" alt="" loading="eager" />
+              <img src="${src}" alt="" loading="eager" data-bg-base="${image.base}" data-bg-ext-index="0" onerror="swapBackgroundImage(this)" />
             </span>
-          ` : "";
+          `;
         }).join("")}
       </div>
     </div>
   `;
+}
+
+function swapBackgroundImage(image) {
+  const current = Number(image.dataset.bgExtIndex) || 0;
+  const next = current + 1;
+  if (next >= BACKGROUND_WALL_EXTENSIONS.length) {
+    image.closest(".manga-bg-tile")?.remove();
+    return;
+  }
+  image.dataset.bgExtIndex = String(next);
+  image.src = `${image.dataset.bgBase}.${BACKGROUND_WALL_EXTENSIONS[next]}`;
 }
 
 function renderActiveView() {
