@@ -2234,15 +2234,7 @@ function renderMangaBackgroundWall() {
         </span>
       `;
     }).join("")
-    : BACKGROUND_WALL_IMAGES.map((image, index) => {
-      const src = `${image.base}.${BACKGROUND_WALL_EXTENSIONS[0]}`;
-      const shape = index % 7 === 0 ? "wide" : index % 5 === 0 ? "tall" : index % 4 === 0 ? "large" : "square";
-      return `
-        <span class="manga-bg-tile manga-bg-tile--${shape}" style="--tile-index:${index}">
-          <img src="${src}" alt="" loading="eager" data-bg-base="${image.base}" data-bg-ext-index="0" onerror="swapBackgroundImage(this)" />
-        </span>
-      `;
-    }).join("");
+    : "";
 
   return `
     <div class="manga-bg-wall" aria-hidden="true">

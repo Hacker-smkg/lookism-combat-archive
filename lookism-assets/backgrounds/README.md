@@ -2,9 +2,9 @@
 
 Only user-approved images are used for the website background wall.
 
-Fast path: open the System page and use **Background Wall -> Upload Images**. The app saves those exact images in the browser with IndexedDB and displays them at 60% opacity. No roster/character cache images are used as fallback art.
+Open the System page and use **Background Wall -> Upload Images**. The app saves those exact images in the browser with IndexedDB and displays them at 60% opacity. No roster/character cache images are used as fallback art.
 
-Deploy path: add the user's selected Lookism background images here using these names:
+If a committed/deployed image bundle is added later, use these reserved names:
 
 
 - `lookism-bg-01.webp`
