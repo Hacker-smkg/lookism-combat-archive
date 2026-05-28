@@ -913,7 +913,13 @@ const FIGHTER_TYPE_PROGRAMS = Object.fromEntries(FIGHTER_TYPE_TRAINING.map((type
 const SYSTEM_STORAGE_KEY = "lookismSystemProgress:v1";
 const PROFILE_STORAGE_KEY = "lookismProfileDiagnosis:v1";
 const AI_CONFIG_STORAGE_KEY = "lookismHybridAiConfig:v1";
+const CHAT_STORAGE_KEY = "lookismSystemChat:v1";
 const CLOUD_CONFIG_ENDPOINT = "/api/config";
+
+function isStaticLocalPreview() {
+  const localHosts = new Set(["127.0.0.1", "localhost", "::1"]);
+  return localHosts.has(window.location.hostname) && ["4173", "4174"].includes(window.location.port);
+}
 
 const RESOURCE_LIBRARY = {
   lookism: [
@@ -1624,6 +1630,7 @@ const UI_STAGES = [
 const storedProgress = loadProgress();
 const storedProfile = loadProfileState();
 const storedAiConfig = loadAiConfig();
+const storedChatMessages = loadChatMessages();
 
 const state = {
   view: "home",
@@ -1650,6 +1657,13 @@ const state = {
   aiConfig: storedAiConfig,
   aiCoachStatus: "",
   aiCoachResult: storedProfile.aiCoachResult,
+  chatOpen: false,
+  chatMessages: storedChatMessages,
+  chatDraft: "",
+  chatStatus: "",
+  chatBusy: false,
+  chatLastSyncedAt: "",
+  chatSyncTimer: null,
   profileResult: "",
   cloudConfig: null,
   cloudClient: null,
@@ -1781,6 +1795,63 @@ function saveAiConfig() {
   }
 }
 
+function createChatId() {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (char) =>
+    (Number(char) ^ ((cryptoApi?.getRandomValues ? cryptoApi.getRandomValues(new Uint8Array(1))[0] : Math.random() * 255) & 15) >> Number(char) / 4).toString(16)
+  );
+}
+
+function normalizeChatMessage(message) {
+  if (!message || typeof message !== "object") return null;
+  const role = ["user", "assistant"].includes(message.role) ? message.role : "assistant";
+  const text = String(message.text || message.content || "").trim();
+  if (!text) return null;
+  return {
+    id: /^[0-9a-f-]{36}$/i.test(String(message.id || "")) ? message.id : createChatId(),
+    role,
+    text: text.slice(0, 2400),
+    createdAt: message.createdAt || message.created_at || new Date().toISOString(),
+    suggestions: Array.isArray(message.suggestions) ? message.suggestions.slice(0, 4) : [],
+    contextSnapshot: message.contextSnapshot || message.context_snapshot || null
+  };
+}
+
+function loadChatMessages() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(normalizeChatMessage).filter(Boolean).slice(-80);
+  } catch {
+    return [];
+  }
+}
+
+function saveChatMessages() {
+  try {
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(state.chatMessages.slice(-80)));
+  } catch {
+    // Chat remains usable even if localStorage is unavailable.
+  }
+}
+
+function addChatMessage(role, text, suggestions = [], contextSnapshot = null) {
+  const message = normalizeChatMessage({
+    id: createChatId(),
+    role,
+    text,
+    suggestions,
+    contextSnapshot,
+    createdAt: new Date().toISOString()
+  });
+  if (!message) return null;
+  state.chatMessages = [...state.chatMessages, message].slice(-80);
+  saveChatMessages();
+  queueChatCloudSync();
+  return message;
+}
+
 function loadProgress() {
   const fallback = defaultSystemProgress();
   try {
@@ -1863,7 +1934,16 @@ function cloudProfilePayload() {
 
 async function initCloudSync() {
   try {
+    if (isStaticLocalPreview()) {
+      state.cloudReady = false;
+      state.cloudStatus = "Static preview mode: local progress, diagnosis, and chat work here. Run on Vercel for Supabase cloud sync.";
+      render();
+      return;
+    }
     const response = await fetch(CLOUD_CONFIG_ENDPOINT, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Cloud config returned HTTP ${response.status}`);
+    }
     const config = await response.json();
     state.cloudConfig = config;
     if (!config.supabaseUrl || !config.supabaseAnonKey) {
@@ -1889,10 +1969,13 @@ async function initCloudSync() {
       state.cloudUser = session?.user || null;
       state.cloudStatus = state.cloudUser ? "Signed in. Syncing cloud progress..." : "Signed out. Local device progress remains available.";
       render();
-      if (state.cloudUser) loadCloudState();
+      if (state.cloudUser) loadCloudState().then(() => loadCloudChatHistory());
     });
     render();
-    if (state.cloudUser) await loadCloudState();
+    if (state.cloudUser) {
+      await loadCloudState();
+      await loadCloudChatHistory();
+    }
   } catch (error) {
     state.cloudReady = false;
     state.cloudStatus = `Cloud sync unavailable: ${error.message}`;
@@ -1927,7 +2010,10 @@ async function cloudAuth(action) {
       ? "Account created. If Supabase email confirmation is on, verify your email, then sign in."
       : "Signed in. Syncing local progress to cloud...";
     render();
-    if (state.cloudUser) await loadCloudState();
+    if (state.cloudUser) {
+      await loadCloudState();
+      await loadCloudChatHistory();
+    }
   } catch (error) {
     state.cloudStatus = `Cloud auth failed: ${error.message}`;
   } finally {
@@ -2079,6 +2165,248 @@ async function recordTrainingLog(logType, title, detail = {}) {
     state.cloudStatus = `Training log sync failed: ${error.message}`;
     render();
   }
+}
+
+function chatCloudPayload(message) {
+  return {
+    id: message.id,
+    user_id: state.cloudUser.id,
+    role: message.role,
+    content: message.text,
+    context_snapshot: message.contextSnapshot || {},
+    suggestions: message.suggestions || [],
+    created_at: message.createdAt
+  };
+}
+
+function mergeChatMessages(localMessages, remoteRows) {
+  const byId = new Map();
+  [...localMessages, ...remoteRows.map((row) => normalizeChatMessage({
+    id: row.id,
+    role: row.role,
+    text: row.content,
+    suggestions: row.suggestions || [],
+    contextSnapshot: row.context_snapshot || null,
+    createdAt: row.created_at
+  }))].filter(Boolean).forEach((message) => byId.set(message.id, message));
+  return [...byId.values()]
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    .slice(-80);
+}
+
+async function loadCloudChatHistory() {
+  if (!hasCloudUser()) return;
+  try {
+    const result = await state.cloudClient
+      .from("chat_messages")
+      .select("*")
+      .eq("user_id", state.cloudUser.id)
+      .order("created_at", { ascending: true })
+      .limit(80);
+    if (result.error) throw result.error;
+    state.chatMessages = mergeChatMessages(state.chatMessages, result.data || []);
+    state.chatStatus = state.chatMessages.length
+      ? `Chat cloud history loaded (${state.chatMessages.length} messages).`
+      : "Chat cloud is ready. Start a System Assistant conversation.";
+    state.chatLastSyncedAt = new Date().toLocaleTimeString();
+    saveChatMessages();
+    await syncChatMessages("load-merge");
+  } catch (error) {
+    state.chatStatus = `Chat cloud sync unavailable: ${error.message}. Run the updated Supabase schema for chat history.`;
+  } finally {
+    render();
+  }
+}
+
+function queueChatCloudSync() {
+  if (!hasCloudUser()) return;
+  clearTimeout(state.chatSyncTimer);
+  state.chatSyncTimer = setTimeout(() => {
+    syncChatMessages("debounced").catch((error) => {
+      state.chatStatus = `Chat cloud sync failed: ${error.message}`;
+      render();
+    });
+  }, 700);
+}
+
+async function syncChatMessages(reason = "manual") {
+  if (!hasCloudUser() || !state.chatMessages.length) return;
+  const payload = state.chatMessages.slice(-80).map(chatCloudPayload);
+  const result = await state.cloudClient
+    .from("chat_messages")
+    .upsert(payload, { onConflict: "id" });
+  if (result.error) throw result.error;
+  state.chatLastSyncedAt = new Date().toLocaleTimeString();
+  if (reason === "manual") state.chatStatus = "Chat history synced to cloud.";
+}
+
+function nextRankInfo() {
+  const progress = currentLevelProgress();
+  const currentRank = rankFromLevel(progress.level);
+  const rankIndex = LEVEL_RANKS.findIndex((rank) => rank.label === currentRank.label);
+  const nextRank = LEVEL_RANKS[Math.min(rankIndex + 1, LEVEL_RANKS.length - 1)];
+  const xpNeeded = nextRank && nextRank.label !== currentRank.label
+    ? Math.max(0, xpForLevel(nextRank.min) - state.totalXp)
+    : 0;
+  return { progress, currentRank, nextRank, xpNeeded };
+}
+
+function buildPromotionReviewData() {
+  const { progress, currentRank, nextRank, xpNeeded } = nextRankInfo();
+  const weekly = questGroup("weekly");
+  const boss = questGroup("boss");
+  const weeklyDone = weekly.filter((quest) => isQuestComplete(quest.id)).length;
+  const bossDone = boss.filter((quest) => isQuestComplete(quest.id)).length;
+  const statAverage = Math.round(Object.values(state.stats || {}).reduce((sum, value) => sum + Number(value || 0), 0) / SYSTEM_STATS.length);
+  const readyForNext = nextRank?.label === currentRank.label
+    || (xpNeeded <= 0 && weeklyDone >= Math.min(1, weekly.length) && bossDone >= Math.min(1, boss.length));
+  return {
+    currentLevel: progress.level,
+    currentRank: currentRank.label,
+    nextRank: nextRank?.label || "Pinnacle Legend",
+    xpNeeded,
+    weeklyDone,
+    weeklyTotal: weekly.length,
+    bossDone,
+    bossTotal: boss.length,
+    statAverage,
+    diagnosisScore: state.profileAnalysis?.overall || null,
+    readyForNext
+  };
+}
+
+function buildChatContextSnapshot() {
+  const { progress, currentRank, nextRank, xpNeeded } = nextRankInfo();
+  return {
+    profile: state.profile,
+    analysis: state.profileAnalysis,
+    appliedJourney: state.appliedJourney,
+    progress: {
+      totalXp: state.totalXp,
+      level: progress.level,
+      currentRank: currentRank.label,
+      nextRank: nextRank?.label || currentRank.label,
+      xpToNextRank: xpNeeded,
+      streak: state.streak,
+      stats: state.stats,
+      penaltyDebt: state.penaltyDebt
+    },
+    recentQuestState: activeQuestCatalog().map((quest) => ({
+      id: quest.id,
+      type: quest.type,
+      title: quest.title,
+      stat: quest.stat,
+      xp: quest.xp,
+      completed: isQuestComplete(quest.id)
+    })),
+    promotionReview: buildPromotionReviewData(),
+    activeWeeklySchedule: activeWeeklySchedule()
+  };
+}
+
+function buildConditionBrief() {
+  const { progress, currentRank, nextRank, xpNeeded } = nextRankInfo();
+  const analysis = state.profileAnalysis;
+  if (!analysis) {
+    return `You are Lv ${progress.level} - ${currentRank.label}. Run System Diagnosis in Profile so I can read your body stats, blockers, and best Lookism training route.`;
+  }
+  const blockers = (analysis.blockers || []).slice(0, 2).join("; ");
+  return `Current condition: ${analysis.currentCategory} (${analysis.overall}/100) at Lv ${progress.level} - ${currentRank.label}. Your route is ${analysis.journey.recommendedFighterType}, ${analysis.journey.recommendedMastery}, and ${analysis.journey.recommendedArt}. Next rank: ${nextRank?.label || "Pinnacle Legend"}${xpNeeded ? `, ${xpNeeded.toLocaleString()} XP away` : ""}. Main blockers: ${blockers || "consistency and clean overload"}.`;
+}
+
+function buildPromotionReviewMessage() {
+  const review = buildPromotionReviewData();
+  if (review.currentRank === "Pinnacle Legend") {
+    return "Promotion review: you are already at Pinnacle Legend. Now the system goal is control: keep weekly boss tests clean, maintain recovery, and refine one signature path.";
+  }
+  const requirements = [];
+  if (review.xpNeeded > 0) requirements.push(`${review.xpNeeded.toLocaleString()} more XP`);
+  if (review.weeklyDone < Math.min(1, review.weeklyTotal)) requirements.push("one weekly quest clear");
+  if (review.bossDone < Math.min(1, review.bossTotal)) requirements.push("one boss quest clear");
+  if (review.diagnosisScore !== null && review.diagnosisScore < 45) requirements.push("raise diagnosis score toward 45+ with your applied journey");
+  return review.readyForNext
+    ? `Promotion review: rules are satisfied for the next climb from ${review.currentRank} toward ${review.nextRank}. The rank itself still follows XP level, so keep clearing quests and the dashboard will update automatically.`
+    : `Promotion review: ${review.currentRank} to ${review.nextRank} is not unlocked yet. Need: ${requirements.join(", ") || "more verified quest progress"}. Average System stat: ${review.statAverage}/100. No AI shortcut; the System only respects logged work.`;
+}
+
+function fallbackAssistantReply(userText, error) {
+  const condition = buildConditionBrief();
+  if (/promot|rank|level|upgrade/i.test(userText)) return buildPromotionReviewMessage();
+  if (/sleep|recover|injur|pain|rest/i.test(userText)) {
+    return `${condition} Recovery focus: protect sleep, hydrate, keep 1-2 easy days, use mobility debt instead of punishment, and avoid hard sparring or max attempts around pain. If an injury is real or worsening, use a qualified professional.`;
+  }
+  if (/diet|food|nutrition|fat|weight/i.test(userText)) {
+    return `${condition} Diet focus: keep meals boring and repeatable: protein each meal, vegetables or fruit daily, water, and a calorie direction that matches your goal. Do not crash diet; consistency gives more XP than extremes.`;
+  }
+  return `${condition} Gemini is unavailable right now${error ? ` (${error.message})` : ""}. For today: clear mobility, base strength, roadwork, and technique reps. Then run one weekly or boss quest when recovery is clean.`;
+}
+
+async function sendChatPrompt(promptText = state.chatDraft) {
+  const text = String(promptText || "").trim();
+  if (!text || state.chatBusy) return;
+  if (!state.profileAnalysis && Object.values(state.profile || {}).some(Boolean)) analyzeProfile();
+  const context = buildChatContextSnapshot();
+  state.chatDraft = "";
+  state.chatStatus = "System Assistant is reading your current save...";
+  addChatMessage("user", text, [], context);
+  state.chatBusy = true;
+  state.chatOpen = true;
+  render();
+  try {
+    const response = await fetch(state.aiConfig.proxyEndpoint || defaultAiProxyEndpoint(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "chat",
+        messages: state.chatMessages.slice(-10).map((message) => ({ role: message.role, content: message.text })),
+        profile: state.profile,
+        analysis: state.profileAnalysis,
+        progress: context.progress,
+        journey: state.appliedJourney,
+        recentQuestState: context.recentQuestState,
+        promotionReview: context.promotionReview
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `Coach returned ${response.status}`);
+    const suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
+    addChatMessage("assistant", data.text || data.output || "I read your System, but Gemini returned no coaching text.", suggestions, context);
+    state.chatStatus = data.source ? `Gemini online via ${data.source}.` : "Assistant response ready.";
+  } catch (error) {
+    addChatMessage("assistant", fallbackAssistantReply(text, error), ["promotion_review", "recovery_plan"], context);
+    state.chatStatus = "Gemini unavailable. Local System fallback answered safely.";
+  } finally {
+    state.chatBusy = false;
+    saveChatMessages();
+    render();
+  }
+}
+
+function runChatAction(action) {
+  state.chatOpen = true;
+  if (action === "promotion-review") {
+    addChatMessage("assistant", buildPromotionReviewMessage(), ["quest_focus"], buildChatContextSnapshot());
+    render();
+    return;
+  }
+  if (action === "brief-condition") {
+    addChatMessage("assistant", buildConditionBrief(), ["promotion_review", "recovery_plan"], buildChatContextSnapshot());
+    render();
+    return;
+  }
+  if (action === "open-profile") {
+    state.view = "profile";
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+  const prompts = {
+    "recovery-plan": "Give me a safe recovery, sleep, and mobility plan for my current System status.",
+    "quest-focus": "Tell me the best quests to complete next for rank progression.",
+    "diet-basics": "Give me diet basics for my current profile and Lookism training path.",
+    "motivation": "Motivate me like a Lookism System assistant, but keep it practical and safe."
+  };
+  sendChatPrompt(prompts[action] || "Briefly coach me based on my current System condition.");
 }
 
 function xpForLevel(level) {
@@ -2365,7 +2693,8 @@ function icon(name) {
     vault: '<rect x="4" y="5" width="16" height="14" rx="1"/><path d="M4 9h16"/><path d="M8 13h3M14 13h2"/>',
     train: '<circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><path d="M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/>',
     path: '<path d="M12 3c5 4 5 14 0 18C7 17 7 7 12 3z"/><path d="M12 7v10"/>',
-    profile: '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21a8 8 0 0 1 16 0"/>'
+    profile: '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    chat: '<path d="M21 12a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-3.6-.75L3 21l1.35-5.2A8.5 8.5 0 1 1 21 12z"/><path d="M8 11.5h8M8 15h5M9 8h6"/>'
   };
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.home}</svg>`;
 }
@@ -2380,8 +2709,10 @@ function render() {
       </div>
       ${renderBottomNav()}
     </main>
+    ${renderChatAssistant()}
   `;
   queueWikiLoad();
+  scrollChatToBottom();
 }
 
 function renderMangaBackgroundWall() {
@@ -2469,6 +2800,119 @@ function renderBottomNav() {
       `).join("")}
     </nav>
   `;
+}
+
+function renderChatAssistant() {
+  const contextLine = buildConditionBrief();
+  const signedIn = hasCloudUser();
+  return `
+    <div class="system-assistant ${state.chatOpen ? "open" : ""}">
+      <button type="button" class="assistant-fab" data-chat-toggle aria-label="${state.chatOpen ? "Close" : "Open"} System Assistant" aria-expanded="${state.chatOpen ? "true" : "false"}">
+        <span class="assistant-fab-core">
+          ${icon("chat")}
+          <span class="assistant-pulse"></span>
+        </span>
+        <span class="assistant-fab-copy">
+          <strong>System AI</strong>
+          <small>Ask coach</small>
+        </span>
+      </button>
+      ${state.chatOpen ? `
+        <button type="button" class="assistant-scrim" data-chat-close aria-label="Close System Assistant"></button>
+        <aside class="assistant-drawer" aria-label="System Assistant chat">
+          <header class="assistant-head">
+            <div>
+              <div class="section-label">System Assistant · AI 코치</div>
+              <h2>Lookism Coach</h2>
+              <p>${escapeHtml(contextLine)}</p>
+            </div>
+            <button type="button" class="assistant-close" data-chat-close aria-label="Close chat">×</button>
+          </header>
+
+          <div class="assistant-context">
+            <button type="button" data-chat-action="brief-condition">Brief condition</button>
+            <button type="button" data-chat-action="promotion-review">Promotion review</button>
+            <button type="button" data-chat-action="quest-focus">Next quests</button>
+            <button type="button" data-chat-action="recovery-plan">Recovery</button>
+          </div>
+
+          <div class="assistant-messages" data-chat-scroll>
+            ${state.chatMessages.length ? state.chatMessages.map(renderChatMessage).join("") : renderChatStarter()}
+            ${state.chatBusy ? `
+              <div class="chat-message assistant typing">
+                <span>Reading your System save</span>
+                <i></i><i></i><i></i>
+              </div>
+            ` : ""}
+          </div>
+
+          <footer class="assistant-foot">
+            <div class="assistant-status">
+              <span>${signedIn ? "Cloud chat" : "Device chat"}</span>
+              <small>${escapeHtml(state.chatStatus || (signedIn ? `Supabase sync ready${state.chatLastSyncedAt ? ` · ${state.chatLastSyncedAt}` : ""}` : "Sign in on System/Profile to cloud sync messages."))}</small>
+            </div>
+            <form class="assistant-form" data-chat-form>
+              <textarea data-chat-input rows="2" placeholder="Ask about condition, training, diet, sleep, recovery, motivation, rank..." ${state.chatBusy ? "disabled" : ""}>${escapeHtml(state.chatDraft)}</textarea>
+              <button type="submit" class="assistant-send" ${state.chatBusy ? "disabled" : ""}>Send</button>
+            </form>
+            <p class="assistant-safety">Fiction-inspired coaching only. Pain, injury, medical, or diet problems need a qualified professional.</p>
+          </footer>
+        </aside>
+      ` : ""}
+    </div>
+  `;
+}
+
+function renderChatStarter() {
+  return `
+    <div class="assistant-starter">
+      <div class="section-label">Awaken System</div>
+      <h3>Your coach is ready.</h3>
+      <p>Ask for a condition brief, rank review, Lookism-style training route, diet basics, sleep reset, or motivation based on your current save.</p>
+      <div class="starter-actions">
+        <button type="button" data-chat-action="brief-condition">Brief me</button>
+        <button type="button" data-chat-action="diet-basics">Diet basics</button>
+        <button type="button" data-chat-action="motivation">Motivate me</button>
+        <button type="button" data-chat-action="open-profile">Open diagnosis</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderChatMessage(message) {
+  const suggestions = (message.suggestions || []).map(renderChatSuggestion).join("");
+  return `
+    <article class="chat-message ${message.role}">
+      <div>${escapeHtml(message.text).replace(/\n/g, "<br>")}</div>
+      ${suggestions ? `<div class="chat-suggestions">${suggestions}</div>` : ""}
+      <time>${escapeHtml(new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))}</time>
+    </article>
+  `;
+}
+
+function renderChatSuggestion(action) {
+  const actionMap = {
+    promotion_review: ["promotion-review", "Promotion review"],
+    recovery_plan: ["recovery-plan", "Recovery plan"],
+    quest_focus: ["quest-focus", "Quest focus"],
+    boss_test_ready: ["quest-focus", "Boss test"],
+    diet_basics: ["diet-basics", "Diet basics"],
+    motivation: ["motivation", "Motivation"]
+  };
+  const [normalized, label] = actionMap[action] || [String(action).replace(/_/g, "-"), labelize(action)];
+  return `<button type="button" data-chat-action="${escapeHtml(normalized)}">${escapeHtml(label)}</button>`;
+}
+
+function scrollChatToBottom() {
+  if (!state.chatOpen) return;
+  requestAnimationFrame(() => {
+    const scrollBox = app.querySelector("[data-chat-scroll]");
+    if (scrollBox) scrollBox.scrollTop = scrollBox.scrollHeight;
+    const input = app.querySelector("[data-chat-input]");
+    if (input && document.activeElement?.dataset?.chatInput === undefined && !state.chatBusy) {
+      input.focus({ preventScroll: true });
+    }
+  });
 }
 
 function selectedFighter() {
@@ -3513,7 +3957,18 @@ function renderProfile() {
       </div>
 
       ${analysis ? renderJourneyRoadmap(analysis) : ""}
-      ${state.aiCoachResult ? `<article class="system-panel ai-result" style="--accent:#8d4dff"><div class="section-label">AI Coach Output</div><p>${escapeHtml(state.aiCoachResult)}</p></article>` : ""}
+      ${state.aiCoachResult ? `
+        <article class="system-panel ai-result" style="--accent:#8d4dff">
+          <div class="section-top compact">
+            <div>
+              <div class="section-label">AI Coach Output</div>
+              <p>Readable summary from the one-shot coach. Use the floating System AI beacon for a full conversation.</p>
+            </div>
+            <button type="button" class="inline-action" data-chat-toggle>Open System AI</button>
+          </div>
+          <div class="ai-output-text">${formatAiText(state.aiCoachResult)}</div>
+        </article>
+      ` : ""}
     </section>
   `;
 }
@@ -3708,6 +4163,15 @@ function cleanWikiValue(value) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 150);
+}
+
+function formatAiText(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
+    .join("");
 }
 
 function numericProfile(key) {
@@ -3937,6 +4401,24 @@ async function runAiCoach() {
 }
 
 app.addEventListener("click", (event) => {
+  if (event.target.closest("[data-chat-toggle]")) {
+    state.chatOpen = !state.chatOpen;
+    render();
+    return;
+  }
+
+  if (event.target.closest("[data-chat-close]")) {
+    state.chatOpen = false;
+    render();
+    return;
+  }
+
+  const chatAction = event.target.closest("[data-chat-action]");
+  if (chatAction) {
+    runChatAction(chatAction.dataset.chatAction);
+    return;
+  }
+
   if (event.target.closest("[data-cloud-signin]")) {
     cloudAuth("signin");
     return;
@@ -4079,7 +4561,17 @@ app.addEventListener("click", (event) => {
   }
 });
 
+app.addEventListener("submit", (event) => {
+  if (event.target.matches("[data-chat-form]")) {
+    event.preventDefault();
+    sendChatPrompt();
+  }
+});
+
 app.addEventListener("input", (event) => {
+  if (event.target.matches("[data-chat-input]")) {
+    state.chatDraft = event.target.value;
+  }
   if (event.target.matches("[data-search]")) {
     state.query = event.target.value;
     render();

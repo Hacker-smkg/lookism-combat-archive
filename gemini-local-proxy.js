@@ -3,8 +3,22 @@ const http = require("http");
 const path = require("path");
 
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const FALLBACK_MODELS = [
+  MODEL,
+  "gemini-2.5-flash-lite",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite"
+].filter((model, index, list) => model && list.indexOf(model) === index);
 const PORT = Number(process.env.GEMINI_PROXY_PORT || 8787);
 const MAX_BODY_BYTES = 1024 * 1024;
+const ALLOWED_SUGGESTIONS = new Set([
+  "promotion_review",
+  "recovery_plan",
+  "quest_focus",
+  "boss_test_ready",
+  "diet_basics",
+  "motivation"
+]);
 
 function loadEnvFile(fileName) {
   const filePath = path.join(process.cwd(), fileName);
@@ -59,29 +73,95 @@ function safePrompt(payload) {
   ].join("\n");
 }
 
-async function callGemini(prompt) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+function sanitizeMessages(messages) {
+  if (!Array.isArray(messages)) return [];
+  return messages.slice(-10).map((message) => ({
+    role: message.role === "assistant" ? "assistant" : "user",
+    content: String(message.content || message.text || "").slice(0, 1200)
+  })).filter((message) => message.content.trim());
+}
+
+function safeChatPrompt(payload) {
+  const context = {
+    profile: payload.profile || {},
+    analysis: payload.analysis || null,
+    progress: payload.progress || {},
+    journey: payload.journey || null,
+    recentQuestState: Array.isArray(payload.recentQuestState) ? payload.recentQuestState.slice(0, 16) : [],
+    promotionReview: payload.promotionReview || {}
+  };
+  return [
+    "You are the System Assistant for a Lookism-inspired fitness app.",
+    "Read the user's profile, diagnosis, XP, rank, stats, quests, and journey. Give concise coaching in a confident but safe tone.",
+    "You can help with condition summary, training route, martial-art focus, mastery guidance, diet basics, sleep, recovery, motivation, and next-rank checklist.",
+    "Do not directly promote the user. Rank changes are deterministic through XP, quests, boss tests, and app rules.",
+    "Safety: fictional UI/path/mastery labels are motivation only. No harmful punishment, crash dieting, medical diagnosis, or full-contact fight advice.",
+    "Return JSON only: {\"text\":\"brief assistant reply under 180 words\",\"suggestions\":[\"promotion_review\",\"quest_focus\"]}.",
+    `Allowed suggestions: ${[...ALLOWED_SUGGESTIONS].join(", ")}`,
+    `Context: ${JSON.stringify(context).slice(0, 9000)}`,
+    `Conversation: ${JSON.stringify(sanitizeMessages(payload.messages)).slice(0, 2600)}`
+  ].join("\n");
+}
+
+function parseCoachResponse(rawText) {
+  const raw = String(rawText || "").trim();
+  const jsonCandidate = raw.match(/\{[\s\S]*\}/)?.[0] || "";
+  try {
+    const parsed = JSON.parse(jsonCandidate);
+    const text = String(parsed.text || "").trim() || raw;
+    const suggestions = Array.isArray(parsed.suggestions)
+      ? parsed.suggestions.filter((item) => ALLOWED_SUGGESTIONS.has(item)).slice(0, 3)
+      : [];
+    return { text, suggestions };
+  } catch {
+    return {
+      text: raw || "I read your System, but the model returned no coaching text.",
+      suggestions: ["quest_focus", "promotion_review"]
+    };
+  }
+}
+
+async function generateWithModel(model, apiKey, prompt, options = {}) {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
   const geminiResponse = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       systemInstruction: {
-        parts: [{ text: "Safe, practical fitness coaching only. Fictional manhwa concepts are motivational labels, not medical, combat, or safety guarantees." }]
+        parts: [{ text: options.systemInstruction || "Safe, practical fitness coaching only. Fictional manhwa concepts are motivational labels, not medical, combat, or safety guarantees." }]
       },
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.55,
-        maxOutputTokens: 420
+        temperature: options.temperature ?? 0.55,
+        maxOutputTokens: options.maxOutputTokens || 420
       }
     })
   });
   const data = await geminiResponse.json().catch(() => ({}));
   if (!geminiResponse.ok) {
-    throw new Error(data.error?.message || `Gemini returned HTTP ${geminiResponse.status}`);
+    throw new Error(data.error?.message || `Gemini ${model} returned HTTP ${geminiResponse.status}`);
   }
-  return data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join(" ").trim() || "Gemini returned no coaching text.";
+  const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join(" ").trim();
+  return {
+    text: text || "Gemini returned no coaching text.",
+    model
+  };
+}
+
+async function callGemini(prompt, options = {}) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
+
+  let lastError;
+  for (const model of FALLBACK_MODELS) {
+    try {
+      return await generateWithModel(model, apiKey, prompt, options);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error("Gemini returned no coaching text.");
 }
 
 const server = http.createServer(async (request, response) => {
@@ -102,8 +182,17 @@ const server = http.createServer(async (request, response) => {
 
   try {
     const payload = JSON.parse((await readBody(request)) || "{}");
-    const text = await callGemini(safePrompt(payload));
-    sendJson(response, 200, { text, model: MODEL, source: "local-gemini-proxy" });
+    if (payload.mode === "chat" || Array.isArray(payload.messages)) {
+      const result = await callGemini(safeChatPrompt(payload), {
+        maxOutputTokens: 720,
+        temperature: 0.62,
+        systemInstruction: "You are a safe Lookism-inspired System Assistant. Stay practical, concise, motivational, and never directly mutate rank, XP, or medical decisions."
+      });
+      sendJson(response, 200, { ...parseCoachResponse(result.text), model: result.model, source: "local-gemini-proxy" });
+      return;
+    }
+    const result = await callGemini(safePrompt(payload));
+    sendJson(response, 200, { text: result.text, model: result.model, source: "local-gemini-proxy" });
   } catch (error) {
     sendJson(response, 500, { error: error.message });
   }
