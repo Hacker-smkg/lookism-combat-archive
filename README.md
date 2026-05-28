@@ -51,6 +51,8 @@ sense, conviction, martial arts, and personal path building.
 - Optional Gemini coaching through `/api/coach` on Vercel or a local proxy.
 - Optional Supabase cloud saving with auth, synced profile/progress, quest
   history, diagnosis reports, and training logs.
+- Permanent background collage from committed images in
+  `lookism-assets/backgrounds`.
 
 ## Training Disclaimer
 
@@ -69,4 +71,5 @@ See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) and
 
 ## Gemini
 
-For production, set `GEMINI_API_KEY` in Vercel environment variables. Do not paste a production key into the browser.
+For production, set `GEMINI_API_KEY` in Vercel environment variables and redeploy.
+Do not paste a production key into the browser. See [LOOKISM_AI_SETUP.md](./LOOKISM_AI_SETUP.md).

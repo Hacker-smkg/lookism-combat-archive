@@ -1,28 +1,25 @@
 # Background Image Slots
 
-Only user-approved images are used for the website background wall.
+Only committed user-approved images are used for the permanent website background collage. The browser upload wall has been removed.
 
-Open the System page and use **Background Wall -> Upload Images**. The app saves those exact images in the browser with IndexedDB and displays them at 60% opacity. No roster/character cache images are used as fallback art.
+The selected Lookism background images are committed here using these reserved names:
 
-If a committed/deployed image bundle is added later, use these reserved names:
+- `lookism-bg-01.png`
+- `lookism-bg-02.png`
+- `lookism-bg-03.png`
+- `lookism-bg-04.png`
+- `lookism-bg-05.png`
+- `lookism-bg-06.png`
+- `lookism-bg-07.png`
+- `lookism-bg-08.png`
+- `lookism-bg-09.png`
+- `lookism-bg-10.png`
+- `lookism-bg-11.png`
+- `lookism-bg-12.png`
+- `lookism-bg-13.png`
+- `lookism-bg-14.png`
+- `lookism-bg-15.png`
+- `lookism-bg-16.png`
+- `lookism-bg-17.png`
 
-
-- `lookism-bg-01.webp`
-- `lookism-bg-02.webp`
-- `lookism-bg-03.webp`
-- `lookism-bg-04.webp`
-- `lookism-bg-05.webp`
-- `lookism-bg-06.webp`
-- `lookism-bg-07.webp`
-- `lookism-bg-08.webp`
-- `lookism-bg-09.webp`
-- `lookism-bg-10.webp`
-- `lookism-bg-11.webp`
-- `lookism-bg-12.webp`
-- `lookism-bg-13.webp`
-- `lookism-bg-14.webp`
-- `lookism-bg-15.webp`
-- `lookism-bg-16.webp`
-- `lookism-bg-17.webp`
-
-The app also checks `.jpg`, `.jpeg`, and `.png` if a `.webp` version is not found.
+The app checks `.png` first, then `.webp`, `.jpg`, and `.jpeg` as fallbacks.

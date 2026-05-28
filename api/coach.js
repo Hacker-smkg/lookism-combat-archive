@@ -1,4 +1,4 @@
-const MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 const MAX_PROMPT_LENGTH = 12000;
 
 function sendJson(response, status, payload) {

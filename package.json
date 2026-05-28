@@ -4,6 +4,7 @@
   "private": true,
   "description": "Standalone Lookism-inspired combat archive and fitness system.",
   "scripts": {
-    "check": "node --check lookism-combat-archive.js && node --check api/coach.js && node --check api/config.js"
+    "check": "node --check lookism-combat-archive.js && node --check api/coach.js && node --check api/config.js && node --check gemini-local-proxy.js",
+    "coach:proxy": "node gemini-local-proxy.js"
   }
 }

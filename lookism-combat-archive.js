@@ -326,10 +326,7 @@ const LOCAL_IMAGES = {
   jiho: "./lookism-assets/characters/jiho.webp"
 };
 
-const BACKGROUND_WALL_EXTENSIONS = ["webp", "jpg", "jpeg", "png"];
-const BACKGROUND_WALL_LIMIT = 17;
-const BACKGROUND_DB_NAME = "lookismBackgroundWall:v1";
-const BACKGROUND_DB_STORE = "images";
+const BACKGROUND_WALL_EXTENSIONS = ["png", "webp", "jpg", "jpeg"];
 const BACKGROUND_WALL_IMAGES = Array.from({ length: 17 }, (_, index) => {
   const id = String(index + 1).padStart(2, "0");
   return {
@@ -1629,9 +1626,6 @@ const state = {
   aiCoachStatus: "",
   aiCoachResult: storedProfile.aiCoachResult,
   profileResult: "",
-  customBackgrounds: [],
-  backgroundStatus: "Upload the exact Lookism images you want in the wall. No random archive art is used.",
-  backgroundLoading: false,
   cloudConfig: null,
   cloudClient: null,
   cloudUser: null,
@@ -2062,133 +2056,6 @@ async function recordTrainingLog(logType, title, detail = {}) {
   }
 }
 
-function openBackgroundDb() {
-  return new Promise((resolve, reject) => {
-    if (typeof indexedDB === "undefined") {
-      reject(new Error("IndexedDB is not available"));
-      return;
-    }
-    const request = indexedDB.open(BACKGROUND_DB_NAME, 1);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(BACKGROUND_DB_STORE)) {
-        db.createObjectStore(BACKGROUND_DB_STORE, { keyPath: "id" });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error("Background storage failed"));
-  });
-}
-
-function revokeBackgroundUrls() {
-  if (typeof URL === "undefined") return;
-  (state.customBackgrounds || []).forEach((image) => {
-    if (image.url && image.url.startsWith("blob:")) URL.revokeObjectURL(image.url);
-  });
-}
-
-function readBackgroundRecords(db) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(BACKGROUND_DB_STORE, "readonly");
-    const request = transaction.objectStore(BACKGROUND_DB_STORE).getAll();
-    request.onsuccess = () => resolve(request.result || []);
-    request.onerror = () => reject(request.error || new Error("Could not read backgrounds"));
-  });
-}
-
-function writeBackgroundRecords(db, files) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(BACKGROUND_DB_STORE, "readwrite");
-    const store = transaction.objectStore(BACKGROUND_DB_STORE);
-    store.clear();
-    files.forEach((file, index) => {
-      store.put({
-        id: `lookism-bg-${String(index + 1).padStart(2, "0")}`,
-        order: index,
-        name: file.name || `Lookism background ${index + 1}`,
-        type: file.type || "image/*",
-        blob: file
-      });
-    });
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error || new Error("Could not save backgrounds"));
-    transaction.onabort = () => reject(transaction.error || new Error("Background save aborted"));
-  });
-}
-
-function clearBackgroundRecords(db) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(BACKGROUND_DB_STORE, "readwrite");
-    transaction.objectStore(BACKGROUND_DB_STORE).clear();
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error || new Error("Could not clear backgrounds"));
-    transaction.onabort = () => reject(transaction.error || new Error("Background clear aborted"));
-  });
-}
-
-async function loadCustomBackgrounds() {
-  try {
-    const db = await openBackgroundDb();
-    const records = (await readBackgroundRecords(db)).sort((a, b) => (a.order || 0) - (b.order || 0));
-    db.close();
-    revokeBackgroundUrls();
-    state.customBackgrounds = records
-      .filter((record) => record.blob)
-      .slice(0, BACKGROUND_WALL_LIMIT)
-      .map((record) => ({
-        id: record.id,
-        name: record.name || "Lookism background",
-        url: URL.createObjectURL(record.blob)
-      }));
-    state.backgroundStatus = state.customBackgrounds.length
-      ? "Showing only your uploaded Lookism background images with increased visibility."
-      : "Upload the exact Lookism images you want in the wall. No random archive art is used.";
-  } catch (error) {
-    state.customBackgrounds = [];
-    state.backgroundStatus = `Background storage unavailable: ${error.message}`;
-  }
-  render();
-}
-
-async function saveBackgroundFiles(fileList) {
-  const files = Array.from(fileList || [])
-    .filter((file) => file.type.startsWith("image/"))
-    .slice(0, BACKGROUND_WALL_LIMIT);
-  if (!files.length) {
-    state.backgroundStatus = "Choose image files to build the wall.";
-    render();
-    return;
-  }
-  state.backgroundStatus = `Saving ${files.length} background image${files.length === 1 ? "" : "s"}...`;
-  render();
-  try {
-    const db = await openBackgroundDb();
-    await writeBackgroundRecords(db, files);
-    db.close();
-    state.backgroundStatus = `${files.length} exact background image${files.length === 1 ? "" : "s"} saved.`;
-    await loadCustomBackgrounds();
-  } catch (error) {
-    state.backgroundStatus = `Could not save backgrounds: ${error.message}`;
-    render();
-  }
-}
-
-async function clearCustomBackgrounds() {
-  state.backgroundStatus = "Clearing uploaded background wall...";
-  render();
-  try {
-    const db = await openBackgroundDb();
-    await clearBackgroundRecords(db);
-    db.close();
-    revokeBackgroundUrls();
-    state.customBackgrounds = [];
-    state.backgroundStatus = "Background wall cleared. Upload only the images you want to use.";
-  } catch (error) {
-    state.backgroundStatus = `Could not clear backgrounds: ${error.message}`;
-  }
-  render();
-}
-
 function xpForLevel(level) {
   const normalized = clamp(level, 1, 100) - 1;
   return Math.round((normalized * normalized * 115) + (normalized * 85));
@@ -2493,17 +2360,15 @@ function render() {
 }
 
 function renderMangaBackgroundWall() {
-  const customBackgrounds = state.customBackgrounds || [];
-  const tiles = customBackgrounds.length
-    ? customBackgrounds.map((image, index) => {
-      const shape = index % 7 === 0 ? "wide" : index % 5 === 0 ? "tall" : index % 4 === 0 ? "large" : "square";
-      return `
+  const tiles = BACKGROUND_WALL_IMAGES.map((image, index) => {
+    const src = `${image.base}.${BACKGROUND_WALL_EXTENSIONS[0]}`;
+    const shape = index % 11 === 0 ? "hero" : index % 7 === 0 ? "wide" : index % 5 === 0 ? "tall" : index % 4 === 0 ? "large" : "square";
+    return `
         <span class="manga-bg-tile manga-bg-tile--${shape}" style="--tile-index:${index}">
-          <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.name)}" loading="eager" />
+          <img src="${src}" alt="${escapeHtml(image.label)}" loading="eager" data-bg-base="${image.base}" data-bg-ext-index="0" onerror="swapBackgroundImage(this)" />
         </span>
       `;
-    }).join("")
-    : "";
+  }).join("");
 
   return `
     <div class="manga-bg-wall" aria-hidden="true">
@@ -2607,8 +2472,6 @@ function renderSystemDashboard() {
         <div class="orb" aria-hidden="true"></div>
       </header>
 
-      ${renderBackgroundManager()}
-
       ${renderCloudPanel()}
 
       <div class="archive-metrics" aria-label="Archive metrics">
@@ -2673,33 +2536,6 @@ function renderSystemDashboard() {
         ${topThree.map(renderMiniFighter).join("")}
       </div>
     </section>
-  `;
-}
-
-function renderBackgroundManager() {
-  const backgrounds = state.customBackgrounds || [];
-  const preview = backgrounds.slice(0, 8).map((image) => `<span><img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.name)}" /></span>`).join("");
-  return `
-    <article class="system-panel background-manager" style="--accent:#ff333d">
-      <div class="section-top compact">
-        <div>
-          <div class="section-label">Background Wall</div>
-          <p>Only images you upload here are used. Select the exact ${BACKGROUND_WALL_LIMIT} Lookism images from your device, and the wall will save in this browser.</p>
-        </div>
-        <div class="action-row">
-          <label class="inline-action bg-upload-label">
-            Upload Images
-            <input type="file" accept="image/*" multiple data-bg-upload />
-          </label>
-          <button type="button" class="inline-action danger" data-bg-clear ${backgrounds.length ? "" : "disabled"}>Clear</button>
-        </div>
-      </div>
-      <div class="background-status-row">
-        <span>${backgrounds.length}/${BACKGROUND_WALL_LIMIT} loaded</span>
-        <small>${escapeHtml(state.backgroundStatus)}</small>
-      </div>
-      ${preview ? `<div class="background-preview-strip">${preview}</div>` : ""}
-    </article>
   `;
 }
 
@@ -4054,7 +3890,7 @@ async function runAiCoach() {
       const data = await response.json();
       text = data.text || data.output || data.message || JSON.stringify(data).slice(0, 600);
     } else if (state.aiConfig.apiKey) {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(state.aiConfig.apiKey)}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(state.aiConfig.apiKey)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -4096,11 +3932,6 @@ app.addEventListener("click", (event) => {
       state.cloudStatus = `Cloud sync failed: ${error.message}`;
       render();
     });
-    return;
-  }
-
-  if (event.target.closest("[data-bg-clear]")) {
-    clearCustomBackgrounds();
     return;
   }
 
@@ -4250,11 +4081,6 @@ app.addEventListener("input", (event) => {
 });
 
 app.addEventListener("change", (event) => {
-  if (event.target.matches("[data-bg-upload]")) {
-    saveBackgroundFiles(event.target.files);
-    event.target.value = "";
-    return;
-  }
   if (event.target.matches("[data-profile]")) {
     state.profile[event.target.dataset.profile] = event.target.value;
     saveProfileState();
@@ -4293,5 +4119,4 @@ app.addEventListener("keydown", (event) => {
 });
 
 render();
-loadCustomBackgrounds();
 initCloudSync();

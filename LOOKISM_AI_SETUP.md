@@ -10,14 +10,14 @@ The app works without Gemini through the offline System Diagnosis. Gemini is opt
 
 ```bash
 GEMINI_API_KEY=your_fresh_restricted_key
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-flash
 GEMINI_PROXY_PORT=8787
 ```
 
 4. Start the proxy from this project folder:
 
 ```bash
-rtk node gemini-local-proxy.js
+rtk npm run coach:proxy
 ```
 
 5. In the app Profile page, keep Proxy Endpoint as:
@@ -36,10 +36,26 @@ The deployed app uses `/api/coach`, which reads `GEMINI_API_KEY` from Vercel env
 
 ```text
 GEMINI_API_KEY=your_fresh_restricted_key
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 Do not paste a key into the browser field for production use.
+
+CLI path:
+
+```bash
+printf %s 'your_fresh_restricted_key' | rtk vercel env add GEMINI_API_KEY production
+printf %s 'gemini-2.5-flash' | rtk vercel env add GEMINI_MODEL production
+rtk vercel --prod --yes
+```
+
+Then verify:
+
+```bash
+rtk curl -s https://lookism-vercel.vercel.app/api/config
+```
+
+`hasGemini` should be `true`.
 
 ## Health Check
 
@@ -50,5 +66,5 @@ rtk curl http://127.0.0.1:8787/health
 Expected shape:
 
 ```json
-{"ok":true,"model":"gemini-1.5-flash","hasKey":true}
+{"ok":true,"model":"gemini-2.5-flash","hasKey":true}
 ```
