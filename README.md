@@ -49,6 +49,8 @@ sense, conviction, martial arts, and personal path building.
   Conviction.
 - Resource links and YouTube tutorial search links for training levels.
 - Optional Gemini coaching through `/api/coach` on Vercel or a local proxy.
+- Optional Supabase cloud saving with auth, synced profile/progress, quest
+  history, diagnosis reports, and training logs.
 
 ## Training Disclaimer
 
@@ -58,9 +60,12 @@ and use proper coaching for sparring, contact drills, grappling, or weapons.
 
 ## Data Storage
 
-User progress is stored in browser `localStorage`. XP, profile diagnosis,
-quests, ranks, and reports persist on the same browser/device. There is no
-account system or cloud database in this version.
+User progress always starts in browser `localStorage` so the app works offline.
+When Supabase is configured and the user signs in, XP, levels, stats, profile
+diagnosis, quests, reports, and logs sync to the project database.
+
+See [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) and
+[supabase/schema.sql](./supabase/schema.sql).
 
 ## Gemini
 

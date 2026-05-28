@@ -607,6 +607,59 @@ img {
   object-fit: cover;
 }
 
+.cloud-panel {
+  --accent: var(--green);
+}
+
+.cloud-panel p {
+  max-width: 820px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.cloud-badge {
+  display: inline-flex;
+  min-width: 92px;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--dim);
+  font-family: var(--display);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.cloud-badge.online {
+  border-color: rgba(25, 197, 102, 0.55);
+  color: var(--green);
+  background: rgba(25, 197, 102, 0.07);
+}
+
+.cloud-auth-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 18px;
+}
+
+.cloud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.cloud-auth-grid .cloud-actions {
+  margin-top: 0;
+}
+
+.cloud-status-row span {
+  color: var(--green);
+}
+
 .page-head-row,
 .section-top {
   display: flex;
@@ -2145,6 +2198,10 @@ img {
 
   .background-preview-strip {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .cloud-auth-grid {
+    grid-template-columns: 1fr;
   }
 }
 

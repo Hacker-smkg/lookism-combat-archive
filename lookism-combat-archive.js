@@ -891,6 +891,7 @@ const FIGHTER_TYPE_PROGRAMS = Object.fromEntries(FIGHTER_TYPE_TRAINING.map((type
 const SYSTEM_STORAGE_KEY = "lookismSystemProgress:v1";
 const PROFILE_STORAGE_KEY = "lookismProfileDiagnosis:v1";
 const AI_CONFIG_STORAGE_KEY = "lookismHybridAiConfig:v1";
+const CLOUD_CONFIG_ENDPOINT = "/api/config";
 
 const RESOURCE_LIBRARY = {
   lookism: [
@@ -1630,7 +1631,17 @@ const state = {
   profileResult: "",
   customBackgrounds: [],
   backgroundStatus: "Upload the exact Lookism images you want in the wall. No random archive art is used.",
-  backgroundLoading: false
+  backgroundLoading: false,
+  cloudConfig: null,
+  cloudClient: null,
+  cloudUser: null,
+  cloudEmail: "",
+  cloudPassword: "",
+  cloudStatus: "Cloud sync is loading...",
+  cloudReady: false,
+  cloudBusy: false,
+  cloudLastSyncedAt: "",
+  cloudSyncTimer: null
 };
 
 const wikiCache = {};
@@ -1798,6 +1809,257 @@ function saveProgress() {
   }
 }
 
+function hasCloudUser() {
+  return Boolean(state.cloudClient && state.cloudUser?.id);
+}
+
+function cloudUserEmail() {
+  return state.cloudUser?.email || state.cloudEmail || "";
+}
+
+function cloudProgressPayload() {
+  return {
+    user_id: state.cloudUser.id,
+    total_xp: Math.max(0, Number(state.totalXp) || 0),
+    level: levelFromXp(state.totalXp),
+    stats: state.stats || defaultSystemStats(),
+    completed_quest_ids: state.completedQuestIds || [],
+    streak: Math.max(0, Number(state.streak) || 0),
+    selected_path: state.selectedPath || "",
+    penalty_debt: Boolean(state.penaltyDebt),
+    last_active_date: state.lastActiveDate || todayKey(),
+    streak_awarded_date: state.streakAwardedDate || null
+  };
+}
+
+function cloudProfilePayload() {
+  return {
+    user_id: state.cloudUser.id,
+    email: cloudUserEmail(),
+    profile_data: state.profile || defaultProfileValues(),
+    latest_analysis: state.profileAnalysis || null,
+    applied_journey: state.appliedJourney || null
+  };
+}
+
+async function initCloudSync() {
+  try {
+    const response = await fetch(CLOUD_CONFIG_ENDPOINT, { cache: "no-store" });
+    const config = await response.json();
+    state.cloudConfig = config;
+    if (!config.supabaseUrl || !config.supabaseAnonKey) {
+      state.cloudReady = false;
+      state.cloudStatus = "Cloud sync waiting for SUPABASE_URL and SUPABASE_ANON_KEY in Vercel.";
+      render();
+      return;
+    }
+    if (!window.supabase?.createClient) {
+      state.cloudReady = false;
+      state.cloudStatus = "Supabase client did not load. Local progress still works.";
+      render();
+      return;
+    }
+    state.cloudClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+    state.cloudReady = true;
+    const sessionResult = await state.cloudClient.auth.getSession();
+    state.cloudUser = sessionResult.data?.session?.user || null;
+    state.cloudStatus = state.cloudUser ? "Cloud account found. Loading saved progress..." : "Cloud ready. Sign in to sync progress across devices.";
+    state.cloudClient.auth.onAuthStateChange((_event, session) => {
+      state.cloudUser = session?.user || null;
+      state.cloudStatus = state.cloudUser ? "Signed in. Syncing cloud progress..." : "Signed out. Local device progress remains available.";
+      render();
+      if (state.cloudUser) loadCloudState();
+    });
+    render();
+    if (state.cloudUser) await loadCloudState();
+  } catch (error) {
+    state.cloudReady = false;
+    state.cloudStatus = `Cloud sync unavailable: ${error.message}`;
+    render();
+  }
+}
+
+async function cloudAuth(action) {
+  if (!state.cloudReady || !state.cloudClient) {
+    state.cloudStatus = "Cloud is not configured yet. Add Supabase env vars in Vercel first.";
+    render();
+    return;
+  }
+  const email = state.cloudEmail.trim();
+  const password = state.cloudPassword;
+  if (!email || !password) {
+    state.cloudStatus = "Enter email and password for cloud sync.";
+    render();
+    return;
+  }
+  state.cloudBusy = true;
+  state.cloudStatus = action === "signup" ? "Creating cloud account..." : "Signing in...";
+  render();
+  try {
+    const result = action === "signup"
+      ? await state.cloudClient.auth.signUp({ email, password })
+      : await state.cloudClient.auth.signInWithPassword({ email, password });
+    if (result.error) throw result.error;
+    state.cloudUser = result.data?.user || result.data?.session?.user || state.cloudUser;
+    state.cloudPassword = "";
+    state.cloudStatus = action === "signup"
+      ? "Account created. If Supabase email confirmation is on, verify your email, then sign in."
+      : "Signed in. Syncing local progress to cloud...";
+    render();
+    if (state.cloudUser) await loadCloudState();
+  } catch (error) {
+    state.cloudStatus = `Cloud auth failed: ${error.message}`;
+  } finally {
+    state.cloudBusy = false;
+    render();
+  }
+}
+
+async function cloudSignOut() {
+  if (!state.cloudClient) return;
+  state.cloudBusy = true;
+  state.cloudStatus = "Signing out...";
+  render();
+  try {
+    await state.cloudClient.auth.signOut();
+    state.cloudUser = null;
+    state.cloudStatus = "Signed out. Local device progress remains available.";
+  } catch (error) {
+    state.cloudStatus = `Sign out failed: ${error.message}`;
+  } finally {
+    state.cloudBusy = false;
+    render();
+  }
+}
+
+function applyRemoteProgress(progress) {
+  if (!progress) return;
+  state.totalXp = Math.max(0, Number(progress.total_xp) || 0);
+  state.level = levelFromXp(state.totalXp);
+  state.completedQuestIds = Array.isArray(progress.completed_quest_ids) ? progress.completed_quest_ids : [];
+  state.streak = Math.max(0, Number(progress.streak) || 0);
+  state.selectedPath = progress.selected_path || state.selectedPath;
+  state.stats = { ...defaultSystemStats(), ...(progress.stats || {}) };
+  state.penaltyDebt = Boolean(progress.penalty_debt);
+  state.lastActiveDate = progress.last_active_date || todayKey();
+  state.streakAwardedDate = progress.streak_awarded_date || "";
+  saveProgress();
+}
+
+function applyRemoteProfile(profile) {
+  if (!profile) return;
+  state.profile = { ...defaultProfileValues(), ...(profile.profile_data || {}) };
+  state.profileAnalysis = profile.latest_analysis || null;
+  state.appliedJourney = profile.applied_journey || null;
+  saveProfileState();
+}
+
+async function loadCloudState() {
+  if (!hasCloudUser()) return;
+  state.cloudBusy = true;
+  state.cloudStatus = "Loading cloud save...";
+  render();
+  try {
+    const [profileResult, progressResult] = await Promise.all([
+      state.cloudClient.from("profiles").select("*").eq("user_id", state.cloudUser.id).maybeSingle(),
+      state.cloudClient.from("progress").select("*").eq("user_id", state.cloudUser.id).maybeSingle()
+    ]);
+    if (profileResult.error) throw profileResult.error;
+    if (progressResult.error) throw progressResult.error;
+    const remoteXp = Number(progressResult.data?.total_xp) || 0;
+    if (progressResult.data && remoteXp >= (Number(state.totalXp) || 0)) {
+      applyRemoteProgress(progressResult.data);
+      applyRemoteProfile(profileResult.data);
+      state.cloudStatus = "Cloud save loaded on this device.";
+    } else {
+      state.cloudStatus = "Local progress is ahead. Uploading it to cloud...";
+      await syncCloudState("initial-merge");
+    }
+    state.cloudLastSyncedAt = new Date().toLocaleTimeString();
+  } catch (error) {
+    state.cloudStatus = `Cloud load failed: ${error.message}. Run supabase/schema.sql if tables are missing.`;
+  } finally {
+    state.cloudBusy = false;
+    render();
+  }
+}
+
+function queueCloudSync() {
+  if (!hasCloudUser()) return;
+  clearTimeout(state.cloudSyncTimer);
+  state.cloudSyncTimer = setTimeout(() => {
+    syncCloudState("debounced").catch((error) => {
+      state.cloudStatus = `Cloud sync failed: ${error.message}`;
+      render();
+    });
+  }, 550);
+}
+
+async function syncCloudState(reason = "manual") {
+  if (!hasCloudUser()) return;
+  const [profileResult, progressResult] = await Promise.all([
+    state.cloudClient.from("profiles").upsert(cloudProfilePayload(), { onConflict: "user_id" }),
+    state.cloudClient.from("progress").upsert(cloudProgressPayload(), { onConflict: "user_id" })
+  ]);
+  if (profileResult.error) throw profileResult.error;
+  if (progressResult.error) throw progressResult.error;
+  state.cloudLastSyncedAt = new Date().toLocaleTimeString();
+  state.cloudStatus = reason === "manual" ? "Cloud save updated." : "Progress synced to cloud.";
+  render();
+}
+
+async function recordQuestCompletion(quest) {
+  if (!hasCloudUser() || !quest) return;
+  try {
+    const result = await state.cloudClient.from("quest_completions").upsert({
+      user_id: state.cloudUser.id,
+      quest_id: quest.id,
+      quest_type: quest.type,
+      title: quest.title,
+      xp_reward: quest.xp,
+      stat_key: quest.stat,
+      stat_gain: quest.statGain,
+      completed_on: todayKey(),
+      quest_payload: quest
+    }, { onConflict: "user_id,quest_id,completed_on" });
+    if (result.error) throw result.error;
+  } catch (error) {
+    state.cloudStatus = `Quest history sync failed: ${error.message}`;
+    render();
+  }
+}
+
+async function recordDiagnosisReport() {
+  if (!hasCloudUser() || !state.profileAnalysis) return;
+  try {
+    const result = await state.cloudClient.from("diagnosis_reports").insert({
+      user_id: state.cloudUser.id,
+      input_profile: state.profile,
+      analysis: state.profileAnalysis
+    });
+    if (result.error) throw result.error;
+  } catch (error) {
+    state.cloudStatus = `Diagnosis report sync failed: ${error.message}`;
+    render();
+  }
+}
+
+async function recordTrainingLog(logType, title, detail = {}) {
+  if (!hasCloudUser()) return;
+  try {
+    const result = await state.cloudClient.from("training_logs").insert({
+      user_id: state.cloudUser.id,
+      log_type: logType,
+      title,
+      detail
+    });
+    if (result.error) throw result.error;
+  } catch (error) {
+    state.cloudStatus = `Training log sync failed: ${error.message}`;
+    render();
+  }
+}
+
 function openBackgroundDb() {
   return new Promise((resolve, reject) => {
     if (typeof indexedDB === "undefined") {
@@ -1877,7 +2139,7 @@ async function loadCustomBackgrounds() {
         url: URL.createObjectURL(record.blob)
       }));
     state.backgroundStatus = state.customBackgrounds.length
-      ? "Showing only your uploaded Lookism background images at 60% opacity."
+      ? "Showing only your uploaded Lookism background images with increased visibility."
       : "Upload the exact Lookism images you want in the wall. No random archive art is used.";
   } catch (error) {
     state.customBackgrounds = [];
@@ -1986,6 +2248,9 @@ function completeQuest(id) {
   if (quest.id === "daily-mobility-reset") state.penaltyDebt = false;
   state.lastActiveDate = todayKey();
   saveProgress();
+  recordQuestCompletion(quest);
+  recordTrainingLog("quest_completion", quest.title, { quest });
+  queueCloudSync();
 }
 
 function resetDailyQuests() {
@@ -1996,6 +2261,7 @@ function resetDailyQuests() {
   state.lastActiveDate = todayKey();
   if (completed < dailyIds.length) state.streakAwardedDate = "";
   saveProgress();
+  queueCloudSync();
 }
 
 function resetSystemProgress() {
@@ -2010,6 +2276,7 @@ function resetSystemProgress() {
   state.lastActiveDate = fresh.lastActiveDate;
   state.streakAwardedDate = fresh.streakAwardedDate;
   saveProgress();
+  queueCloudSync();
 }
 
 function activeWeeklySchedule() {
@@ -2340,6 +2607,8 @@ function renderSystemDashboard() {
 
       ${renderBackgroundManager()}
 
+      ${renderCloudPanel()}
+
       <div class="archive-metrics" aria-label="Archive metrics">
         ${metricCard("Level", levelProgress.level, rank.label)}
         ${metricCard("XP", state.totalXp.toLocaleString(), `${levelProgress.next.toLocaleString()} next`)}
@@ -2428,6 +2697,48 @@ function renderBackgroundManager() {
         <small>${escapeHtml(state.backgroundStatus)}</small>
       </div>
       ${preview ? `<div class="background-preview-strip">${preview}</div>` : ""}
+    </article>
+  `;
+}
+
+function renderCloudPanel() {
+  const signedIn = Boolean(state.cloudUser);
+  const status = state.cloudStatus || "Cloud sync is loading...";
+  const lastSync = state.cloudLastSyncedAt ? `Last sync ${state.cloudLastSyncedAt}` : "No cloud sync yet";
+  return `
+    <article class="system-panel cloud-panel" style="--accent:#19c566">
+      <div class="section-top compact">
+        <div>
+          <div class="section-label">Cloud Save</div>
+          <p>${signedIn ? `Signed in as ${escapeHtml(cloudUserEmail())}. XP, profile diagnosis, quests, and reports sync to Supabase.` : "Sign in to sync XP, levels, profile diagnosis, quests, reports, and logs across devices."}</p>
+        </div>
+        <span class="cloud-badge ${signedIn ? "online" : ""}">${signedIn ? "Online" : state.cloudReady ? "Ready" : "Offline"}</span>
+      </div>
+      ${signedIn ? `
+        <div class="cloud-actions">
+          <button type="button" class="inline-action" data-cloud-sync ${state.cloudBusy ? "disabled" : ""}>Sync Now</button>
+          <button type="button" class="inline-action danger" data-cloud-signout ${state.cloudBusy ? "disabled" : ""}>Sign Out</button>
+        </div>
+      ` : `
+        <div class="cloud-auth-grid">
+          <label class="field">
+            <span>Email</span>
+            <input data-cloud-auth="email" value="${escapeHtml(state.cloudEmail)}" placeholder="you@example.com" autocomplete="email" />
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input data-cloud-auth="password" value="${escapeHtml(state.cloudPassword)}" placeholder="minimum 6 characters" type="password" autocomplete="current-password" />
+          </label>
+          <div class="cloud-actions">
+            <button type="button" class="inline-action" data-cloud-signin ${state.cloudBusy || !state.cloudReady ? "disabled" : ""}>Sign In</button>
+            <button type="button" class="inline-action" data-cloud-signup ${state.cloudBusy || !state.cloudReady ? "disabled" : ""}>Create Account</button>
+          </div>
+        </div>
+      `}
+      <div class="background-status-row cloud-status-row">
+        <span>${state.cloudBusy ? "Syncing" : signedIn ? "Synced Save" : "Device Save"}</span>
+        <small>${escapeHtml(status)} · ${escapeHtml(lastSync)}</small>
+      </div>
     </article>
   `;
 }
@@ -3326,6 +3637,7 @@ function renderProfile() {
         </section>
 
         <aside class="diagnosis-side">
+          ${renderCloudPanel()}
           <article class="system-panel rank-panel" style="--accent:${rank.color}">
             <div class="meta-label">System Rank</div>
             <h2 class="rank-title">${escapeHtml(rank.label)}</h2>
@@ -3597,6 +3909,8 @@ function analyzeProfile() {
   };
   state.profileResult = state.profileAnalysis.summary;
   saveProfileState();
+  recordDiagnosisReport();
+  queueCloudSync();
 }
 
 function buildBlockers(input) {
@@ -3716,6 +4030,8 @@ function applyProfileJourney() {
   }
   saveProfileState();
   saveProgress();
+  recordTrainingLog("journey_applied", state.profileAnalysis.currentCategory, { journey: state.appliedJourney });
+  queueCloudSync();
 }
 
 async function runAiCoach() {
@@ -3758,6 +4074,29 @@ async function runAiCoach() {
 }
 
 app.addEventListener("click", (event) => {
+  if (event.target.closest("[data-cloud-signin]")) {
+    cloudAuth("signin");
+    return;
+  }
+
+  if (event.target.closest("[data-cloud-signup]")) {
+    cloudAuth("signup");
+    return;
+  }
+
+  if (event.target.closest("[data-cloud-signout]")) {
+    cloudSignOut();
+    return;
+  }
+
+  if (event.target.closest("[data-cloud-sync]")) {
+    syncCloudState("manual").catch((error) => {
+      state.cloudStatus = `Cloud sync failed: ${error.message}`;
+      render();
+    });
+    return;
+  }
+
   if (event.target.closest("[data-bg-clear]")) {
     clearCustomBackgrounds();
     return;
@@ -3895,10 +4234,16 @@ app.addEventListener("input", (event) => {
   if (event.target.matches("[data-profile]")) {
     state.profile[event.target.dataset.profile] = event.target.value;
     saveProfileState();
+    queueCloudSync();
   }
   if (event.target.matches("[data-ai-config]")) {
     state.aiConfig[event.target.dataset.aiConfig] = event.target.value;
     saveAiConfig();
+  }
+  if (event.target.matches("[data-cloud-auth]")) {
+    const key = event.target.dataset.cloudAuth;
+    if (key === "email") state.cloudEmail = event.target.value;
+    if (key === "password") state.cloudPassword = event.target.value;
   }
 });
 
@@ -3911,10 +4256,16 @@ app.addEventListener("change", (event) => {
   if (event.target.matches("[data-profile]")) {
     state.profile[event.target.dataset.profile] = event.target.value;
     saveProfileState();
+    queueCloudSync();
   }
   if (event.target.matches("[data-ai-config]")) {
     state.aiConfig[event.target.dataset.aiConfig] = event.target.value;
     saveAiConfig();
+  }
+  if (event.target.matches("[data-cloud-auth]")) {
+    const key = event.target.dataset.cloudAuth;
+    if (key === "email") state.cloudEmail = event.target.value;
+    if (key === "password") state.cloudPassword = event.target.value;
   }
 });
 
@@ -3941,3 +4292,4 @@ app.addEventListener("keydown", (event) => {
 
 render();
 loadCustomBackgrounds();
+initCloudSync();
