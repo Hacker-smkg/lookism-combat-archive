@@ -4361,9 +4361,30 @@ function applyProfileJourney() {
   queueCloudSync();
 }
 
+function offlineCoachSummary() {
+  const analysis = state.profileAnalysis || analyzeProfile();
+  const journey = analysis.journey || buildJourneyForCategory(USER_CATEGORIES[0], analysis.scores || {});
+  const blockers = (analysis.blockers || []).slice(0, 3).join(", ") || "consistency, recovery, and clean reps";
+  return [
+    `Condition: ${analysis.currentCategory} at ${analysis.overall}/100. Main blockers: ${blockers}.`,
+    `Training focus: run ${journey.recommendedFighterType}, ${journey.recommendedMastery}, and ${journey.recommendedArt} as your main route.`,
+    `Weekly plan: ${journey.schedule.map((day) => `${day[0]} ${day[1]}`).join("; ")}.`,
+    "Recovery and diet: keep sleep consistent, use low-impact conditioning when joints feel heavy, eat repeatable protein-forward meals, and avoid crash intensity.",
+    `Next rank: ${analysis.nextCategory}. Clear daily quests, one weekly quest, and one boss test before chasing harder work.`
+  ].join("\n\n");
+}
+
+function normalizeAiCoachText(text) {
+  const clean = String(text || "").trim();
+  const fallback = offlineCoachSummary();
+  if (!clean) return fallback;
+  if (clean.length < 90 || clean.split(/\s+/).length < 18) return `${clean}\n\n${fallback}`;
+  return clean;
+}
+
 async function runAiCoach() {
   if (!state.profileAnalysis) analyzeProfile();
-  const prompt = `You are a safe fitness coach for a Lookism-inspired training app. Summarize a practical weekly plan from this diagnosis. Do not claim fictional powers are real. Keep it under 120 words.\n${JSON.stringify({ profile: state.profile, analysis: state.profileAnalysis })}`;
+  const prompt = `You are a safe fitness coach for a Lookism-inspired training app. Summarize a practical weekly plan from this diagnosis. Do not claim fictional powers are real. Return 4 clear labeled bullets: Condition, Training Focus, Recovery/Diet, Next Rank. Do not return only a title. Keep it under 140 words.\n${JSON.stringify({ profile: state.profile, analysis: state.profileAnalysis })}`;
   state.aiCoachStatus = "Contacting optional AI coach...";
   state.aiCoachResult = "";
   render();
@@ -4391,10 +4412,10 @@ async function runAiCoach() {
       throw new Error("No Gemini key or proxy endpoint configured");
     }
     state.aiCoachStatus = "AI coach completed.";
-    state.aiCoachResult = text || "AI coach returned no text. Offline diagnosis is still applied.";
+    state.aiCoachResult = normalizeAiCoachText(text);
   } catch (error) {
     state.aiCoachStatus = "AI coach unavailable. Offline diagnosis is active.";
-    state.aiCoachResult = `AI fallback: ${error.message}. Use the offline journey, then configure a proxy endpoint or Gemini key later.`;
+    state.aiCoachResult = `AI fallback: ${error.message}.\n\n${offlineCoachSummary()}`;
   }
   saveProfileState();
   render();
