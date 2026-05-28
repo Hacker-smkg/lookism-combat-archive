@@ -1787,6 +1787,11 @@ function defaultAiProxyEndpoint() {
   return "http://127.0.0.1:8787/coach";
 }
 
+function shouldUseOfflineAiFallback(endpoint) {
+  const normalized = String(endpoint || "").replace(/\/$/, "");
+  return isStaticLocalPreview() && normalized === "http://127.0.0.1:8787/coach";
+}
+
 function saveAiConfig() {
   try {
     localStorage.setItem(AI_CONFIG_STORAGE_KEY, JSON.stringify(state.aiConfig));
@@ -2353,7 +2358,11 @@ async function sendChatPrompt(promptText = state.chatDraft) {
   state.chatOpen = true;
   render();
   try {
-    const response = await fetch(state.aiConfig.proxyEndpoint || defaultAiProxyEndpoint(), {
+    const endpoint = state.aiConfig.proxyEndpoint || defaultAiProxyEndpoint();
+    if (shouldUseOfflineAiFallback(endpoint)) {
+      throw new Error("Local Gemini proxy is not running in static preview");
+    }
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -4363,12 +4372,19 @@ function applyProfileJourney() {
 
 function offlineCoachSummary() {
   const analysis = state.profileAnalysis || analyzeProfile();
-  const journey = analysis.journey || buildJourneyForCategory(USER_CATEGORIES[0], analysis.scores || {});
+  const journey = analysis.journey || buildJourney(USER_CATEGORIES[0], analysis.scores || {}, analysis.blockers || [], {
+    days: numericProfile("daysPerWeek") || 4,
+    session: numericProfile("sessionLength") || 45,
+    goal: state.profile.goal || "general",
+    injuries: state.profile.injuries || "",
+    equipment: state.profile.equipment || "bodyweight"
+  });
+  const schedule = journey.weeklySchedule || WEEKLY_SCHEDULES;
   const blockers = (analysis.blockers || []).slice(0, 3).join(", ") || "consistency, recovery, and clean reps";
   return [
     `Condition: ${analysis.currentCategory} at ${analysis.overall}/100. Main blockers: ${blockers}.`,
     `Training focus: run ${journey.recommendedFighterType}, ${journey.recommendedMastery}, and ${journey.recommendedArt} as your main route.`,
-    `Weekly plan: ${journey.schedule.map((day) => `${day[0]} ${day[1]}`).join("; ")}.`,
+    `Weekly plan: ${schedule.map((day) => `${day[0]} ${day[1]}`).join("; ")}.`,
     "Recovery and diet: keep sleep consistent, use low-impact conditioning when joints feel heavy, eat repeatable protein-forward meals, and avoid crash intensity.",
     `Next rank: ${analysis.nextCategory}. Clear daily quests, one weekly quest, and one boss test before chasing harder work.`
   ].join("\n\n");
@@ -4387,10 +4403,13 @@ async function runAiCoach() {
   const prompt = `You are a safe fitness coach for a Lookism-inspired training app. Summarize a practical weekly plan from this diagnosis. Do not claim fictional powers are real. Return 4 clear labeled bullets: Condition, Training Focus, Recovery/Diet, Next Rank. Do not return only a title. Keep it under 140 words.\n${JSON.stringify({ profile: state.profile, analysis: state.profileAnalysis })}`;
   state.aiCoachStatus = "Contacting optional AI coach...";
   state.aiCoachResult = "";
-  render();
+    render();
   try {
     let text = "";
     if (state.aiConfig.proxyEndpoint) {
+      if (shouldUseOfflineAiFallback(state.aiConfig.proxyEndpoint)) {
+        throw new Error("Local Gemini proxy is not running in static preview");
+      }
       const response = await fetch(state.aiConfig.proxyEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
