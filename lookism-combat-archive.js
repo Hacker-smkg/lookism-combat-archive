@@ -16,6 +16,10 @@ const WIKI_SOPHIA_URL = "https://lookism.fandom.com/wiki/Sophia_Alexander";
 const WIKI_BREKDAK_URL = "https://lookism.fandom.com/wiki/Brekdak";
 const WIKI_ELI_URL = "https://lookism.fandom.com/wiki/Eli_Jang";
 const WIKI_JOHAN_URL = "https://lookism.fandom.com/wiki/Johan_Seong";
+const WIKI_PAECHEON_URL = "https://lookism.fandom.com/wiki/Paecheon_Jo";
+const WIKI_BONGAE_URL = "https://lookism.fandom.com/wiki/Bongae_Choi";
+const WIKI_BAKGU_URL = "https://lookism.fandom.com/wiki/Bakgu_Noh";
+const WIKI_JAEGYEON_URL = "https://lookism.fandom.com/wiki/Jaegyeon_Na";
 const WIKI_ULTRA_INSTINCT_URL = "https://lookism.fandom.com/wiki/Ultra_Instinct";
 const SOLO_SYSTEM_URL = "https://solo-leveling.fandom.com/wiki/System";
 const SOLO_QUESTS_URL = "https://solo-leveling.fandom.com/wiki/Quests";
@@ -165,7 +169,7 @@ const IMAGES = {
     source: "https://lookism.fandom.com/wiki/Logan_Lee"
   },
   jay: {
-    url: "https://static.wikia.nocookie.net/lookism/images/e/e9/Jay_icon.png/revision/latest/scale-to-width-down/320?cb=20200601175149",
+    url: "https://static.wikia.nocookie.net/lookism/images/b/b4/Jay_%28Allied%29.jpg/revision/latest?cb=20230909061739",
     source: "https://lookism.fandom.com/wiki/Jay_Hong"
   },
   jason: {
@@ -267,6 +271,22 @@ const IMAGES = {
   jiho: {
     url: "https://static.wikia.nocookie.net/lookism/images/7/77/Onenight.jpg/revision/latest?cb=20211208062531",
     source: "https://lookism.fandom.com/wiki/Jiho_Park"
+  },
+  paecheon: {
+    url: "https://static.wikia.nocookie.net/lookism/images/0/0c/Paecheon_Ep_564_2.JPG/revision/latest?cb=20250906233301",
+    source: WIKI_PAECHEON_URL
+  },
+  bongae: {
+    url: "https://static.wikia.nocookie.net/lookism/images/3/30/ChoiBongae.png/revision/latest?cb=20230318005014",
+    source: WIKI_BONGAE_URL
+  },
+  bakgu: {
+    url: "https://static.wikia.nocookie.net/lookism/images/7/79/Bakgu.png/revision/latest?cb=20230315223809",
+    source: WIKI_BAKGU_URL
+  },
+  jaegyeon: {
+    url: "https://static.wikia.nocookie.net/lookism/images/a/ae/Changyeon_Na_%28Cheongliang_Arc%29.jpg/revision/latest?cb=20260209164000",
+    source: WIKI_JAEGYEON_URL
   }
 };
 
@@ -323,7 +343,12 @@ const LOCAL_IMAGES = {
   hangyeol: "./lookism-assets/characters/hangyeol.webp",
   jibeom: "./lookism-assets/characters/jibeom.webp",
   jihan: "./lookism-assets/characters/jihan.webp",
-  jiho: "./lookism-assets/characters/jiho.webp"
+  jiho: "./lookism-assets/characters/jiho.webp",
+  jay: "./lookism-assets/characters/jay.webp",
+  paecheon: "./lookism-assets/characters/paecheon.webp",
+  bongae: "./lookism-assets/characters/bongae.webp",
+  bakgu: "./lookism-assets/characters/bakgu.webp",
+  jaegyeon: "./lookism-assets/characters/jaegyeon.webp"
 };
 
 const BACKGROUND_WALL_EXTENSIONS = ["png", "webp", "jpg", "jpeg"];
@@ -522,14 +547,14 @@ const rosterSeed = [
   ["Ryuhei Kuroda", "Magician", "Workers 2A", "21-50 Powerhouse", "weapon", "ryuhei", "weapon speed conviction"],
   ["Kenta Magami", "Yamazaki grudge", "Workers 2A", "21-50 Powerhouse", "striker", "kenta", "technique conviction"],
   ["Hudson Ahn", "Sun of Ansan", "Allied", "21-50 Powerhouse", "king-strength", "hudson", "strength conviction"],
-  ["Ryuhei", "Nomen pressure slot", "Workers 2A", "21-50 Powerhouse", "weapon", "ryuhei", "weapon speed conviction"],
+  ["Jay Hong", "Systema / Kali-Arnis specialist", "J-High Allied", "21-50 Powerhouse", "weapon", "jay", "weapon technique speed"],
   ["Logan Lee", "J-High bully tank", "Workers / J-High", "21-50 Powerhouse", "crew", "logan", "strength endurance"],
   ["Baekho Kwon", "Gapryong's Shield", "Gapryong Fist", "21-50 Powerhouse", "wild-wall", "baekho", "strength endurance"],
   ["Hansu Seong", "Taekwondo master", "PTJ connected", "21-50 Powerhouse", "striker", "hansu", "speed technique"],
   ["Brekdak", "Muay Thai teacher", "Burn Knuckles mentor", "21-50 Powerhouse", "striker", "brekdak", "technique strength endurance"],
-  ["Baekho Kwon", "Prime guard slot", "Gapryong Fist", "21-50 Powerhouse", "wild-wall", "baekho", "strength endurance"],
-  ["Chungcheongnam-do King", "Jichang Kwak title slot", "First Generation", "21-50 Powerhouse", "striker", "jichang", "technique strength speed"],
-  ["Shintaro", "Yamazaki clan blade", "Yamazaki Clan", "21-50 Powerhouse", "weapon", "shintaro", "weapon technique speed"],
+  ["Paecheon Jo", "Black Alligator / Dark Crocodile", "Pre-Generation", "21-50 Powerhouse", "wild-wall", "paecheon", "strength endurance conviction"],
+  ["Jaegyeon Na", "King of Incheon", "First Generation", "21-50 Powerhouse", "speed-legend", "jaegyeon", "speed technique path"],
+  ["Shintaro Yamazaki", "Shingen's brother", "Yamazaki Clan", "21-50 Powerhouse", "weapon", "shintaro", "weapon technique speed"],
   ["Sinu Han", "Invisible Attacks", "Big Deal", "21-50 Powerhouse", "speed-legend", "sinu", "speed technique"],
   ["Jaeha Kim", "Jaeha Han / PTJ crossover", "Questism", "21-50 Powerhouse", "striker", "jaeha", "speed technique conviction"],
   ["Seokdu Wang", "King of Suwon", "First Generation", "21-50 Powerhouse", "king-strength", "seokdu", "strength endurance"],
@@ -538,8 +563,8 @@ const rosterSeed = [
   ["Hangyeol Baek", "First affiliate doctor", "Workers 1A", "21-50 Powerhouse", "crew", "hangyeol", "technique conviction"],
   ["Kwak Jibeom", "Kwak family power", "Kwak family", "21-50 Powerhouse", "king-strength", "jibeom", "strength technique"],
   ["Kwak Jichang's Brother", "Jihan Kwak", "Kwak family", "21-50 Powerhouse", "striker", "jihan", "technique speed"],
-  ["Taejin", "Taejin Cheon duplicate slot", "Cheonliang", "21-50 Powerhouse", "grappler", "taejin", "strength technique conviction"],
-  ["Jiho Park", "Late Series", "Juvie", "21-50 Powerhouse", "conviction-brawler", "jiho", "conviction speed"]
+  ["Bongae Choi", "Lightning Choi", "Pre-Generation", "21-50 Powerhouse", "speed-legend", "bongae", "speed technique endurance"],
+  ["Bakgu Noh", "Fist Gang elder", "Pre-Generation", "21-50 Powerhouse", "crew", "bakgu", "technique endurance conviction"]
 ];
 
 const roster = rosterSeed.map((entry, index) => {
@@ -763,7 +788,7 @@ const FIGHTER_TYPE_TRAINING = [
     type: "Speed Legend",
     ko: "속도 전설형",
     color: MASTERY_META.speed.color,
-    users: "James Lee · Sinu Han · Charles Choi",
+    users: "James Lee · Sinu Han · Charles Choi · Bongae Choi",
     base: "Capoeira rhythm, evasive kicking, sprint mechanics, blind-side entries.",
     beginner: "Jump rope, ginga, sprint starts, balance holds, and clean kick chambering.",
     intermediate: "Angle entries, one-hand-behind-back shadowboxing, blind-side pad touches, and exit-after-strike rules.",
@@ -774,7 +799,7 @@ const FIGHTER_TYPE_TRAINING = [
     type: "Wild Wall",
     ko: "야성 · 벽 타입",
     color: MASTERY_META.strength.color,
-    users: "Tom Lee · Eli Jang · Baekho Kwon",
+    users: "Tom Lee · Eli Jang · Baekho Kwon · Paecheon Jo",
     base: "Grip violence, clinch pressure, wall wrestling, carries, ugly-range survival.",
     beginner: "Loaded carries, basic pummeling, safe breakfalls, guard recovery, and neck/hip mobility.",
     intermediate: "Wall pins, clinch entries, balance breaks, sprawl-to-sprint, and grip switch intervals.",
@@ -785,7 +810,7 @@ const FIGHTER_TYPE_TRAINING = [
     type: "Weapon Specialist",
     ko: "무기 전문가",
     color: MASTERY_META.weapon.color,
-    users: "Goo Kim · Xiaolong · Manager Kim · Sophia",
+    users: "Goo Kim · Xiaolong · Manager Kim · Sophia · Jay Hong",
     base: "Distance control, object awareness, foam-weapon timing, wrist and shoulder endurance.",
     beginner: "Triangle footwork, hand protection, exit habits, and safe foam-stick angle lines.",
     intermediate: "Range switching, check-hand control, grip endurance, retreat-entry timing, and target-line defense.",
@@ -851,7 +876,7 @@ const FIGHTER_TYPE_TRAINING = [
     type: "Crew Enforcer",
     ko: "크루 집행자",
     color: MASTERY_META.conviction.color,
-    users: "Jerry Kwon · Logan Lee · Hangyeol Baek · Jiho Park",
+    users: "Jerry Kwon · Logan Lee · Hangyeol Baek · Bakgu Noh",
     base: "Street pressure, conditioning, wall awareness, dirty-range survival.",
     beginner: "Basic strength circuit, shuttle runs, guard recovery, wall awareness, and de-escalation habits.",
     intermediate: "Two-on-one escape patterns, close-range footwork, wall pin defense, and grip finishers.",
