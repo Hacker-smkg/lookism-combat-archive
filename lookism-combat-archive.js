@@ -1849,7 +1849,9 @@ async function initCloudSync() {
     state.cloudConfig = config;
     if (!config.supabaseUrl || !config.supabaseAnonKey) {
       state.cloudReady = false;
-      state.cloudStatus = "Cloud sync waiting for SUPABASE_URL and SUPABASE_ANON_KEY in Vercel.";
+      state.cloudStatus = config.supabaseUrl
+        ? "Cloud sync waiting for SUPABASE_ANON_KEY in Vercel."
+        : "Cloud sync waiting for SUPABASE_URL and SUPABASE_ANON_KEY in Vercel.";
       render();
       return;
     }
