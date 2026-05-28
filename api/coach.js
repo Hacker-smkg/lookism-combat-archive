@@ -74,8 +74,17 @@ function parseCoachResponse(rawText) {
       : [];
     return { text, suggestions };
   } catch {
+    const cleaned = raw
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+    const partialText = cleaned.match(/"text"\s*:\s*"((?:\\.|[^"\\])*)/)?.[1]
+      ?.replace(/\\"/g, "\"")
+      .replace(/\\n/g, "\n")
+      .replace(/\\u([0-9a-f]{4})/gi, (_match, code) => String.fromCharCode(parseInt(code, 16)))
+      .trim();
     return {
-      text: raw || "I read your System, but the model returned no coaching text.",
+      text: partialText || cleaned || "I read your System, but the model returned no coaching text.",
       suggestions: ["quest_focus", "promotion_review"]
     };
   }
