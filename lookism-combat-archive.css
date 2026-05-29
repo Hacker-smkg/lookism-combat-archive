@@ -381,7 +381,11 @@ img {
   place-items: center;
   border: 2px solid var(--blue);
   border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.18) 0 3px, transparent 4px),
+    radial-gradient(circle at 50% 50%, rgba(35, 104, 255, 0.3), transparent 58%);
   box-shadow: 0 0 32px rgba(35, 104, 255, 0.38), inset 0 0 28px rgba(35, 104, 255, 0.16);
+  animation: systemOrbGlow 2.8s ease-in-out infinite;
 }
 
 .orb::before,
@@ -394,6 +398,8 @@ img {
 .orb::before {
   inset: 21px;
   border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 0 18px rgba(35, 104, 255, 0.18);
+  animation: systemOrbInner 2.8s ease-in-out infinite;
 }
 
 .orb::after {
@@ -401,6 +407,7 @@ img {
   height: 8px;
   background: #fff;
   box-shadow: 0 0 20px #fff;
+  animation: systemOrbCore 1.6s ease-in-out infinite;
 }
 
 .archive-metrics {
@@ -2155,7 +2162,15 @@ img {
     linear-gradient(90deg, rgba(35, 104, 255, 0.18), rgba(0, 0, 0, 0.92)),
     rgba(0, 0, 0, 0.94);
   box-shadow: 0 0 34px rgba(35, 104, 255, 0.46), inset 0 0 24px rgba(35, 104, 255, 0.16);
+  cursor: grab;
   transform: translateY(-50%);
+  touch-action: none;
+  user-select: none;
+}
+
+.assistant-fab.dragging {
+  cursor: grabbing;
+  box-shadow: 0 0 46px rgba(35, 104, 255, 0.72), inset 0 0 26px rgba(35, 104, 255, 0.2);
 }
 
 .assistant-fab-core {
@@ -2468,6 +2483,44 @@ img {
   50% {
     opacity: 0.9;
     transform: scale(1.1);
+  }
+}
+
+@keyframes systemOrbGlow {
+  0%,
+  100% {
+    border-color: rgba(35, 104, 255, 0.72);
+    box-shadow: 0 0 24px rgba(35, 104, 255, 0.28), inset 0 0 22px rgba(35, 104, 255, 0.12);
+    filter: saturate(0.92);
+  }
+  50% {
+    border-color: rgba(85, 145, 255, 1);
+    box-shadow: 0 0 54px rgba(35, 104, 255, 0.72), 0 0 110px rgba(35, 104, 255, 0.16), inset 0 0 34px rgba(35, 104, 255, 0.28);
+    filter: saturate(1.25);
+  }
+}
+
+@keyframes systemOrbInner {
+  0%,
+  100% {
+    opacity: 0.48;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.92;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes systemOrbCore {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(0.82);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.28);
   }
 }
 

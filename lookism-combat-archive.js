@@ -914,6 +914,7 @@ const SYSTEM_STORAGE_KEY = "lookismSystemProgress:v1";
 const PROFILE_STORAGE_KEY = "lookismProfileDiagnosis:v1";
 const AI_CONFIG_STORAGE_KEY = "lookismHybridAiConfig:v1";
 const CHAT_STORAGE_KEY = "lookismSystemChat:v1";
+const ASSISTANT_POSITION_STORAGE_KEY = "lookismAssistantPosition:v1";
 const CLOUD_CONFIG_ENDPOINT = "/api/config";
 
 function isStaticLocalPreview() {
@@ -1664,6 +1665,9 @@ const state = {
   chatBusy: false,
   chatLastSyncedAt: "",
   chatSyncTimer: null,
+  assistantPosition: loadAssistantPosition(),
+  assistantDragging: false,
+  assistantDragSuppress: false,
   profileResult: "",
   cloudConfig: null,
   cloudClient: null,
@@ -1838,6 +1842,31 @@ function saveChatMessages() {
     localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(state.chatMessages.slice(-80)));
   } catch {
     // Chat remains usable even if localStorage is unavailable.
+  }
+}
+
+function loadAssistantPosition() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ASSISTANT_POSITION_STORAGE_KEY) || "null");
+    if (!parsed || typeof parsed !== "object") return null;
+    const x = Number(parsed.x);
+    const y = Number(parsed.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    return { x, y };
+  } catch {
+    return null;
+  }
+}
+
+function saveAssistantPosition(position) {
+  try {
+    if (!position) {
+      localStorage.removeItem(ASSISTANT_POSITION_STORAGE_KEY);
+      return;
+    }
+    localStorage.setItem(ASSISTANT_POSITION_STORAGE_KEY, JSON.stringify(position));
+  } catch {
+    // The assistant still works if the drag position cannot persist.
   }
 }
 
@@ -2811,12 +2840,24 @@ function renderBottomNav() {
   `;
 }
 
+function assistantFabStyle() {
+  const position = state.assistantPosition;
+  if (!position) return "";
+  const width = window.innerWidth <= 720 ? 62 : 188;
+  const height = window.innerWidth <= 720 ? 62 : 68;
+  const margin = 12;
+  const x = clamp(position.x, margin, Math.max(margin, window.innerWidth - width - margin));
+  const y = clamp(position.y, margin, Math.max(margin, window.innerHeight - height - margin));
+  state.assistantPosition = { x, y };
+  return `left:${x}px;top:${y}px;right:auto;bottom:auto;transform:none;`;
+}
+
 function renderChatAssistant() {
   const contextLine = buildConditionBrief();
   const signedIn = hasCloudUser();
   return `
     <div class="system-assistant ${state.chatOpen ? "open" : ""}">
-      <button type="button" class="assistant-fab" data-chat-toggle aria-label="${state.chatOpen ? "Close" : "Open"} System Assistant" aria-expanded="${state.chatOpen ? "true" : "false"}">
+      <button type="button" class="assistant-fab" data-chat-toggle data-assistant-drag aria-label="${state.chatOpen ? "Close" : "Open"} System Assistant" aria-expanded="${state.chatOpen ? "true" : "false"}" style="${assistantFabStyle()}">
         <span class="assistant-fab-core">
           ${icon("chat")}
           <span class="assistant-pulse"></span>
@@ -4433,15 +4474,95 @@ async function runAiCoach() {
     state.aiCoachStatus = "AI coach completed.";
     state.aiCoachResult = normalizeAiCoachText(text);
   } catch (error) {
-    state.aiCoachStatus = "AI coach unavailable. Offline diagnosis is active.";
-    state.aiCoachResult = `AI fallback: ${error.message}.\n\n${offlineCoachSummary()}`;
+    state.aiCoachStatus = `AI coach unavailable: ${error.message}. Offline System summary shown.`;
+    state.aiCoachResult = offlineCoachSummary();
   }
   saveProfileState();
   render();
 }
 
+const assistantDrag = {
+  active: false,
+  pointerId: null,
+  startX: 0,
+  startY: 0,
+  offsetX: 0,
+  offsetY: 0,
+  moved: false
+};
+
+function clampAssistantPosition(x, y, rect) {
+  const margin = 12;
+  const width = rect?.width || (window.innerWidth <= 720 ? 62 : 188);
+  const height = rect?.height || (window.innerWidth <= 720 ? 62 : 68);
+  return {
+    x: clamp(Math.round(x), margin, Math.max(margin, window.innerWidth - width - margin)),
+    y: clamp(Math.round(y), margin, Math.max(margin, window.innerHeight - height - margin))
+  };
+}
+
+function moveAssistantFab(fab, x, y) {
+  fab.style.left = `${x}px`;
+  fab.style.top = `${y}px`;
+  fab.style.right = "auto";
+  fab.style.bottom = "auto";
+  fab.style.transform = "none";
+}
+
+app.addEventListener("pointerdown", (event) => {
+  const fab = event.target.closest("[data-assistant-drag]");
+  if (!fab || state.chatOpen) return;
+  const rect = fab.getBoundingClientRect();
+  assistantDrag.active = true;
+  assistantDrag.pointerId = event.pointerId;
+  assistantDrag.startX = event.clientX;
+  assistantDrag.startY = event.clientY;
+  assistantDrag.offsetX = event.clientX - rect.left;
+  assistantDrag.offsetY = event.clientY - rect.top;
+  assistantDrag.moved = false;
+  fab.classList.add("dragging");
+  fab.setPointerCapture?.(event.pointerId);
+});
+
+app.addEventListener("pointermove", (event) => {
+  if (!assistantDrag.active || assistantDrag.pointerId !== event.pointerId) return;
+  const fab = app.querySelector("[data-assistant-drag]");
+  if (!fab) return;
+  const distance = Math.hypot(event.clientX - assistantDrag.startX, event.clientY - assistantDrag.startY);
+  if (distance > 4) assistantDrag.moved = true;
+  if (!assistantDrag.moved) return;
+  event.preventDefault();
+  const next = clampAssistantPosition(event.clientX - assistantDrag.offsetX, event.clientY - assistantDrag.offsetY, fab.getBoundingClientRect());
+  moveAssistantFab(fab, next.x, next.y);
+});
+
+app.addEventListener("pointerup", (event) => {
+  if (!assistantDrag.active || assistantDrag.pointerId !== event.pointerId) return;
+  const fab = app.querySelector("[data-assistant-drag]");
+  if (fab) {
+    fab.classList.remove("dragging");
+    fab.releasePointerCapture?.(event.pointerId);
+    if (assistantDrag.moved) {
+      const rect = fab.getBoundingClientRect();
+      state.assistantPosition = clampAssistantPosition(rect.left, rect.top, rect);
+      saveAssistantPosition(state.assistantPosition);
+      moveAssistantFab(fab, state.assistantPosition.x, state.assistantPosition.y);
+      state.assistantDragSuppress = true;
+      window.setTimeout(() => {
+        state.assistantDragSuppress = false;
+      }, 0);
+    }
+  }
+  assistantDrag.active = false;
+  assistantDrag.pointerId = null;
+});
+
 app.addEventListener("click", (event) => {
   if (event.target.closest("[data-chat-toggle]")) {
+    if (state.assistantDragSuppress) {
+      state.assistantDragSuppress = false;
+      return;
+    }
     state.chatOpen = !state.chatOpen;
     render();
     return;
