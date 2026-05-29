@@ -4394,7 +4394,7 @@ function normalizeAiCoachText(text) {
   const clean = String(text || "").trim();
   const fallback = offlineCoachSummary();
   if (!clean) return fallback;
-  if (clean.length < 90 || clean.split(/\s+/).length < 18) return `${clean}\n\n${fallback}`;
+  if (clean.length < 140 || clean.split(/\s+/).length < 30) return fallback;
   return clean;
 }
 
