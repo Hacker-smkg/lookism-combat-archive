@@ -1669,9 +1669,11 @@ const storedChatMessages = loadChatMessages();
 const storedUserSettings = loadUserSettings();
 const storedTrainingProgress = loadTrainingProgress();
 const storedTrainingLogs = loadTrainingLogs();
+storedUserSettings.diagnosisCompleted = Boolean(storedUserSettings.diagnosisCompleted || storedProfile.profileAnalysis || storedProfile.appliedJourney);
+storedUserSettings.awakeningAccepted = Boolean(storedUserSettings.awakeningAccepted || storedUserSettings.onboardingComplete || storedUserSettings.diagnosisCompleted);
 
 const state = {
-  view: "home",
+  view: initialViewFromSaved(storedUserSettings, storedProfile, storedProgress),
   query: "",
   selectedId: roster.find((fighter) => fighter.name === "James Lee")?.id || roster[0].id,
   selectedMastery: "",
@@ -1929,6 +1931,13 @@ function saveChatMessages() {
 function defaultUserSettings() {
   return {
     onboardingComplete: false,
+    onboardingStep: "auth",
+    awakeningAccepted: false,
+    guestMode: false,
+    lastVisitedView: "",
+    diagnosisCompleted: false,
+    diagnosisStep: "body",
+    selectedGoal: "general",
     focusMode: false,
     vaultFilter: "all",
     lastSyncedAt: ""
@@ -1943,7 +1952,14 @@ function loadUserSettings() {
     return {
       ...fallback,
       ...(parsed || {}),
-      onboardingComplete: Boolean(parsed?.onboardingComplete || onboarding?.complete)
+      onboardingComplete: Boolean(parsed?.onboardingComplete || onboarding?.complete),
+      awakeningAccepted: Boolean(parsed?.awakeningAccepted || parsed?.onboardingComplete || onboarding?.complete),
+      guestMode: Boolean(parsed?.guestMode),
+      diagnosisCompleted: Boolean(parsed?.diagnosisCompleted),
+      diagnosisStep: parsed?.diagnosisStep || fallback.diagnosisStep,
+      selectedGoal: parsed?.selectedGoal || fallback.selectedGoal,
+      onboardingStep: parsed?.onboardingStep || fallback.onboardingStep,
+      lastVisitedView: parsed?.lastVisitedView || fallback.lastVisitedView
     };
   } catch {
     return fallback;
@@ -1960,6 +1976,21 @@ function saveUserSettings() {
   } catch {
     // UI preferences are best-effort.
   }
+}
+
+function initialViewFromSaved(settings, profileState, progressState) {
+  const hasDiagnosis = Boolean(settings.diagnosisCompleted || profileState.profileAnalysis || profileState.appliedJourney);
+  const hasLocalProgress = Boolean((progressState.totalXp || 0) > 0 || (progressState.completedQuestIds || []).length);
+  if (hasDiagnosis || hasLocalProgress || settings.onboardingComplete) return "home";
+  if (settings.awakeningAccepted) return "diagnosis";
+  if (settings.guestMode) return "awakening";
+  return "auth";
+}
+
+function setUserFlow(partial) {
+  state.userSettings = { ...state.userSettings, ...partial };
+  saveUserSettings();
+  syncUserSettings().catch(() => {});
 }
 
 function loadTrainingProgress() {
@@ -2190,6 +2221,10 @@ async function initCloudSync() {
     if (state.cloudUser) {
       await loadCloudState();
       await loadCloudChatHistory();
+      if (!state.profileAnalysis && state.view === "auth") {
+        setUserFlow({ guestMode: false, onboardingStep: "awakening" });
+        state.view = "awakening";
+      }
     }
   } catch (error) {
     state.cloudReady = false;
@@ -3225,10 +3260,20 @@ function icon(name) {
     vault: '<rect x="4" y="5" width="16" height="14" rx="1"/><path d="M4 9h16"/><path d="M8 13h3M14 13h2"/>',
     train: '<circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><path d="M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/>',
     path: '<path d="M12 3c5 4 5 14 0 18C7 17 7 7 12 3z"/><path d="M12 7v10"/>',
+    reports: '<path d="M5 20V6"/><path d="M5 20h15"/><path d="M9 16v-5"/><path d="M13 16V8"/><path d="M17 16v-3"/>',
     profile: '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     chat: '<path d="M21 12a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-3.6-.75L3 21l1.35-5.2A8.5 8.5 0 1 1 21 12z"/><path d="M8 11.5h8M8 15h5M9 8h6"/>'
   };
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.home}</svg>`;
+}
+
+function resolveRequestedView(view) {
+  if (view !== "home") return view;
+  const hasStarted = Boolean(state.userSettings.guestMode || state.userSettings.awakeningAccepted || state.profileAnalysis || state.appliedJourney || state.totalXp > 0);
+  if (!hasStarted) return "auth";
+  if (!state.userSettings.awakeningAccepted && !state.profileAnalysis) return "awakening";
+  if (!state.profileAnalysis && !state.userSettings.diagnosisCompleted) return "diagnosis";
+  return "home";
 }
 
 function render() {
@@ -3279,11 +3324,15 @@ function swapBackgroundImage(image) {
 }
 
 function renderActiveView() {
+  if (state.view === "auth") return renderAuthGate();
+  if (state.view === "awakening") return renderAwakening();
+  if (state.view === "diagnosis") return renderDiagnosisWizard();
   if (state.view === "fighters") return renderFighters();
   if (state.view === "fighter") return renderFighterDetail(selectedFighter());
   if (state.view === "vault") return renderVault();
   if (state.view === "train") return renderTrain();
   if (state.view === "path") return renderPath();
+  if (state.view === "reports") return renderReports();
   if (state.view === "profile") return renderProfile();
   return renderHome();
 }
@@ -3295,19 +3344,28 @@ function navItems() {
     ["vault", "Vault"],
     ["train", "Train"],
     ["path", "Path"],
+    ["reports", "Reports"],
     ["profile", "Profile"]
   ];
 }
 
 function renderTopNav() {
   const active = state.view === "fighter" ? "fighters" : state.view;
+  const entry = ["auth", "awakening"].includes(state.view);
   return `
-    <header class="web-header">
+    <header class="web-header ${entry ? "entry-header" : ""}">
       <button type="button" class="brand-lockup" data-view="home" aria-label="Open home">
         <span>PTJ UNIVERSE</span>
         <strong>LOOKISM</strong>
       </button>
-      <nav class="top-nav" aria-label="Lookism Combat Archive navigation">
+      ${entry ? `
+        <div class="entry-rail" aria-label="Entry flow">
+          <span class="${state.view === "auth" ? "active" : ""}">Login</span>
+          <span class="${state.view === "awakening" ? "active" : ""}">Awaken</span>
+          <span>Diagnose</span>
+          <span>System</span>
+        </div>
+      ` : `<nav class="top-nav" aria-label="Lookism Combat Archive navigation">
         ${navItems().map(([view, label]) => `
           <button type="button" class="${active === view ? "active" : ""}" data-view="${view}">
             ${icon(view)}
@@ -3318,12 +3376,13 @@ function renderTopNav() {
           ${icon("path")}
           <span>Focus</span>
         </button>
-      </nav>
+      </nav>`}
     </header>
   `;
 }
 
 function renderBottomNav() {
+  if (["auth", "awakening"].includes(state.view)) return "";
   const items = navItems();
   const active = state.view === "fighter" ? "fighters" : state.view;
   return `
@@ -3474,6 +3533,189 @@ function renderHome() {
   return renderSystemDashboard();
 }
 
+const DIAGNOSIS_STEPS = [
+  { id: "body", label: "Body", group: "body", title: "Body Details", desc: "Height, weight, body fat, and age define the current form baseline." },
+  { id: "context", label: "Training", group: "context", title: "Training Context", desc: "Training age, equipment, days, session length, goal, martial experience, and injury limits shape the route." },
+  { id: "prs", label: "Strength", group: "prs", title: "Strength PRs", desc: "Lift records help classify power base and identify the safest overload path." },
+  { id: "tests", label: "Benchmarks", group: "tests", title: "Benchmark Tests", desc: "Pull-ups, push-ups, plank, mile, and 5K build the endurance and performance score." },
+  { id: "result", label: "Result", group: "", title: "Diagnosis Result", desc: "Run the offline system, review blockers, then apply the journey to the dashboard." }
+];
+
+function currentDiagnosisStepIndex() {
+  return Math.max(0, DIAGNOSIS_STEPS.findIndex((step) => step.id === state.userSettings.diagnosisStep));
+}
+
+function renderAuthGate() {
+  const signedIn = Boolean(state.cloudUser);
+  const status = state.cloudStatus || "Cloud sync is loading...";
+  return `
+    <section class="page entry-page auth-page" style="--accent:#2368ff">
+      <div class="entry-hero">
+        <div>
+          <div class="eyebrow">ENTRY GATE · 클라우드 / 게스트</div>
+          <h1 class="system-title entry-title">ENTER<br>THE SYSTEM</h1>
+          <p class="entry-copy">Login is the main route. Guest mode stays available, but it saves only on this browser until you sign in and sync.</p>
+          <div class="entry-flow-map" aria-label="System flow">
+            ${["Login", "Awaken", "Diagnose", "System"].map((step, index) => `<span class="${index === 0 ? "active" : ""}">${escapeHtml(step)}</span>`).join("")}
+          </div>
+        </div>
+        <div class="orb entry-orb" aria-hidden="true"></div>
+      </div>
+
+      <div class="entry-grid">
+        <article class="system-panel auth-card" style="--accent:#2368ff">
+          <div class="section-label">Supabase Cloud Save</div>
+          <h2>${signedIn ? "Cloud Account Found" : "Sign In"}</h2>
+          <p>${signedIn ? `Signed in as ${escapeHtml(cloudUserEmail())}. Continue to System Awakening or restore your cloud save.` : "Sync XP, diagnosis reports, style progress, chat history, quests, and training logs across devices."}</p>
+          ${signedIn ? `
+            <div class="cloud-actions">
+              <button type="button" class="analysis-button compact" data-cloud-restore>Restore Cloud</button>
+              <button type="button" class="analysis-button compact secondary" data-accept-system>Continue</button>
+              <button type="button" class="inline-action danger" data-cloud-signout>Sign Out</button>
+            </div>
+          ` : `
+            <div class="cloud-auth-grid single">
+              <label class="field">
+                <span>Email</span>
+                <input data-cloud-auth="email" value="${escapeHtml(state.cloudEmail)}" placeholder="you@example.com" autocomplete="email" />
+              </label>
+              <label class="field">
+                <span>Password</span>
+                <input data-cloud-auth="password" value="${escapeHtml(state.cloudPassword)}" placeholder="minimum 6 characters" type="password" autocomplete="current-password" />
+              </label>
+              <div class="cloud-actions">
+                <button type="button" class="analysis-button compact" data-cloud-signin ${state.cloudBusy || !state.cloudReady ? "disabled" : ""}>Sign In</button>
+                <button type="button" class="analysis-button compact secondary" data-cloud-signup ${state.cloudBusy || !state.cloudReady ? "disabled" : ""}>Create Account</button>
+              </div>
+            </div>
+          `}
+          <div class="background-status-row cloud-status-row">
+            <span>${state.cloudBusy ? "Syncing" : signedIn ? "Cloud Save" : state.cloudReady ? "Cloud Ready" : "Cloud Offline"}</span>
+            <small>${escapeHtml(status)}</small>
+          </div>
+        </article>
+
+        <article class="system-panel guest-card" style="--accent:#8d4dff">
+          <div class="section-label">Guest Mode</div>
+          <h2>Continue Local</h2>
+          <p>Use the app immediately with browser storage. XP, diagnosis, quests, reports, and chat stay on this device until you export or sign in.</p>
+          <button type="button" class="analysis-button compact secondary" data-continue-guest>Continue as Guest</button>
+          <div class="tiny">Recommended if you want to test the System before creating an account.</div>
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function renderAwakening() {
+  const goals = [
+    ["general", "Balanced Rise"],
+    ["fat-loss", "Body Reset"],
+    ["strength", "King Strength"],
+    ["speed", "Speed Path"],
+    ["martial", "Technique Route"]
+  ];
+  return `
+    <section class="page entry-page awakening-page" style="--accent:#ff333d">
+      <div class="awakening-core">
+        <div class="orb awakening-orb" aria-hidden="true"></div>
+        <div class="eyebrow">SYSTEM MESSAGE · 각성 조건</div>
+        <h1 class="system-title entry-title">THE SYSTEM<br>HAS SELECTED YOU</h1>
+        <p class="entry-copy">Accept only if you agree to progressive training, honest logs, and recovery-first decisions. The System rewards consistency before intensity.</p>
+        <article class="system-panel contract-panel" style="--accent:#ff333d">
+          <div class="section-label">Contract Conditions</div>
+          <div class="contract-grid">
+            <span>Safe training over reckless copying</span>
+            <span>Recovery debt replaces punishment</span>
+            <span>Pain or injury means stop and adjust</span>
+            <span>Fiction inspires discipline, not medical advice</span>
+          </div>
+          <div class="section-label">Choose Goal</div>
+          <div class="chip-list goal-list">
+            ${goals.map(([id, label]) => `<button type="button" class="chip ${state.userSettings.selectedGoal === id ? "active" : ""}" data-awakening-goal="${id}">${escapeHtml(label)}</button>`).join("")}
+          </div>
+          <div class="profile-actions">
+            <button type="button" class="analysis-button compact" data-accept-system>Accept System</button>
+            <button type="button" class="analysis-button compact ghost" data-view="auth">Back</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function renderDiagnosisWizard() {
+  const currentIndex = currentDiagnosisStepIndex();
+  const step = DIAGNOSIS_STEPS[currentIndex] || DIAGNOSIS_STEPS[0];
+  const analysis = state.profileAnalysis;
+  return `
+    <section class="page diagnosis-wizard-page" style="--accent:${analysis?.color || "#f0a42f"}">
+      <div class="page-head-row">
+        <div>
+          <div class="eyebrow">SYSTEM DIAGNOSIS · STEP ${currentIndex + 1} OF ${DIAGNOSIS_STEPS.length}</div>
+          <h1 class="page-title">System Diagnosis</h1>
+          <p class="page-subtitle">${escapeHtml(step.desc)}</p>
+        </div>
+        <div class="roster-count"><strong>${currentIndex + 1}/${DIAGNOSIS_STEPS.length}</strong><span>${escapeHtml(step.label)}</span></div>
+      </div>
+
+      <div class="diagnosis-wizard-layout">
+        <aside class="system-panel wizard-rail" style="--accent:#f0a42f">
+          <div class="section-label">Wizard Route</div>
+          ${DIAGNOSIS_STEPS.map((item, index) => `
+            <button type="button" class="${index === currentIndex ? "active" : ""} ${index < currentIndex ? "done" : ""}" data-diagnosis-step="${item.id}">
+              <span>${String(index + 1).padStart(2, "0")}</span>
+              <b>${escapeHtml(item.label)}</b>
+            </button>
+          `).join("")}
+        </aside>
+
+        <section class="system-panel diagnosis-form wizard-form" style="--accent:#2368ff">
+          <div class="section-label">Input Window</div>
+          <h2>${escapeHtml(step.title)}</h2>
+          ${step.id === "result" ? renderDiagnosisWizardResult() : `
+            ${renderProfileValidation()}
+            ${renderProfileFieldGroup(step.title, step.group)}
+          `}
+          <div class="profile-actions">
+            <button type="button" class="analysis-button compact ghost" data-diagnosis-prev ${currentIndex === 0 ? "disabled" : ""}>Back</button>
+            ${step.id === "result" ? `
+              <button type="button" class="analysis-button compact" data-analyze-offline>Analyze Offline</button>
+              <button type="button" class="analysis-button compact secondary" data-apply-journey ${analysis ? "" : "disabled"}>Apply Journey</button>
+            ` : `
+              <button type="button" class="analysis-button compact" data-diagnosis-next>Next Step</button>
+            `}
+          </div>
+        </section>
+
+        <aside class="diagnosis-side wizard-preview">
+          ${analysis ? renderDiagnosisResult(analysis) : renderDiagnosisEmpty()}
+          ${analysis ? renderJourneyRoadmap(analysis) : ""}
+        </aside>
+      </div>
+    </section>
+  `;
+}
+
+function renderDiagnosisWizardResult() {
+  const analysis = state.profileAnalysis;
+  if (!analysis) {
+    return `
+      <div class="diagnosis-final-empty">
+        <p>Run the offline diagnosis to classify your current category, blockers, and higher-rank journey.</p>
+      </div>
+    `;
+  }
+  return `
+    <div class="diagnosis-final">
+      <div class="section-label">Current Category</div>
+      <h3>${escapeHtml(analysis.currentCategory)}</h3>
+      <p>${escapeHtml(analysis.summary)}</p>
+      <div class="chip-list">${analysis.blockers.map((blocker) => `<span class="chip">${escapeHtml(blocker)}</span>`).join("")}</div>
+    </div>
+  `;
+}
+
 function renderSystemDashboard() {
   const levelProgress = currentLevelProgress();
   const rank = rankFromLevel(levelProgress.level);
@@ -3492,12 +3734,11 @@ function renderSystemDashboard() {
         <div class="orb" aria-hidden="true"></div>
       </header>
 
-      ${state.userSettings.onboardingComplete ? "" : renderOnboardingPanel()}
-
       <div class="archive-metrics" aria-label="Archive metrics">
         ${metricCard("Level", levelProgress.level, rank.label)}
         ${metricCard("XP", state.totalXp.toLocaleString(), `${levelProgress.next.toLocaleString()} next`)}
         ${metricCard("Streak", state.streak, "daily clears")}
+        ${metricCard("Save", hasCloudUser() ? "Cloud" : state.userSettings.guestMode ? "Guest" : "Local", hasCloudUser() ? "synced account" : "device save")}
       </div>
 
       <div class="system-layout">
@@ -3513,12 +3754,7 @@ function renderSystemDashboard() {
           </div>
         </article>
 
-        <article class="system-panel stat-panel" style="--accent:${rank.color}">
-          <div class="section-label">System Stats <span class="help-tip" title="Dashboard stats grow from completed quests and training levels. They are separate from Profile Diagnosis Score.">?</span></div>
-          <div class="stat-grid">
-            ${SYSTEM_STATS.map(renderStatMeter).join("")}
-          </div>
-        </article>
+        ${renderDashboardBriefPanel(rank, journey)}
       </div>
 
       <article class="system-panel message">
@@ -3528,8 +3764,6 @@ function renderSystemDashboard() {
       </article>
 
       ${journey ? renderAppliedJourney(journey) : renderNoJourneyPrompt()}
-
-      ${renderCloudPanel()}
 
       ${state.penaltyDebt ? renderPenaltyZone() : ""}
 
@@ -3550,15 +3784,84 @@ function renderSystemDashboard() {
         ${activeWeeklySchedule().map(renderScheduleDay).join("")}
       </div>
 
-      ${renderProgressHistory()}
-
       <div class="section-top">
         <div class="section-label">Pinnacle References</div>
-        <button type="button" class="inline-action" data-view="fighters">Open Roster</button>
+        <span class="action-row">
+          <button type="button" class="inline-action" data-view="reports">Open Reports</button>
+          <button type="button" class="inline-action" data-view="fighters">Open Roster</button>
+        </span>
       </div>
       <div class="top-tier-strip">
         ${topThree.map(renderMiniFighter).join("")}
       </div>
+    </section>
+  `;
+}
+
+function renderDashboardBriefPanel(rank, journey) {
+  const analysis = state.profileAnalysis;
+  return `
+    <article class="system-panel stat-panel dashboard-brief-panel" style="--accent:${rank.color}">
+      <div class="section-label">Status Window <span class="help-tip" title="Dashboard stats grow from completed quests and training levels. They are separate from Profile Diagnosis Score.">?</span></div>
+      <div class="stat-grid compact-stats">
+        ${SYSTEM_STATS.map(renderStatMeter).join("")}
+      </div>
+      <div class="dashboard-next-grid">
+        <div>
+          <div class="section-label">Next Rank</div>
+          <p>${escapeHtml(nextRankChecklistText(rank, analysis))}</p>
+        </div>
+        <div>
+          <div class="section-label">System AI Brief</div>
+          <p>${escapeHtml(journey ? `Focus ${journey.recommendedMastery}, ${journey.recommendedArt}, and recovery consistency today.` : "Run diagnosis to unlock a personalized quest route.")}</p>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function nextRankChecklistText(rank, analysis) {
+  const progress = currentLevelProgress();
+  const nextRank = LEVEL_RANKS.find((item) => item.min > progress.level);
+  if (!nextRank) return "Pinnacle Legend reached. Maintain control, recovery, and clean boss tests.";
+  const xpNeeded = Math.max(0, progress.next - state.totalXp);
+  const diagnosisPart = analysis ? `Diagnosis ${analysis.overall}/100` : "diagnosis pending";
+  return `${xpNeeded.toLocaleString()} XP to Lv ${progress.level + 1}; ${diagnosisPart}; clear daily quests and one boss test toward ${nextRank.label}.`;
+}
+
+function renderReports() {
+  const analysis = state.profileAnalysis;
+  return `
+    <section class="page reports-page" style="--accent:#19c566">
+      <div class="page-head-row">
+        <div>
+          <div class="eyebrow">REPORTS · 성장 기록</div>
+          <h1 class="page-title">Progress Report</h1>
+          <p class="page-subtitle">XP history · streak heat · stat growth · boss PRs · diagnosis snapshots</p>
+        </div>
+        <div class="roster-count"><strong>${state.trainingLogs.length}</strong><span>logs</span></div>
+      </div>
+
+      <div class="reports-summary-grid">
+        ${metricCard("Total XP", state.totalXp.toLocaleString(), `Lv ${currentLevelProgress().level}`)}
+        ${metricCard("Streak", state.streak, "daily clears")}
+        ${metricCard("Diagnosis", analysis ? `${analysis.overall}/100` : "Pending", analysis?.currentCategory || "Run diagnosis")}
+        ${metricCard("Save", hasCloudUser() ? "Cloud" : "Local", state.cloudLastSyncedAt || "device")}
+      </div>
+
+      ${renderProgressHistory()}
+
+      <section class="system-panel report-diagnosis-panel" style="--accent:${analysis?.color || "#f0a42f"}">
+        <div class="section-top compact">
+          <div>
+            <div class="section-label">Latest Diagnosis Report</div>
+            <h2>${escapeHtml(analysis?.currentCategory || "Awaiting Diagnosis")}</h2>
+            <p>${escapeHtml(analysis?.summary || "Run System Diagnosis to create the first saved category report.")}</p>
+          </div>
+          <button type="button" class="inline-action" data-view="diagnosis">${analysis ? "Run Again" : "Start Diagnosis"}</button>
+        </div>
+        ${analysis ? `<div class="chip-list">${analysis.blockers.map((blocker) => `<span class="chip">${escapeHtml(blocker)}</span>`).join("")}</div>` : ""}
+      </section>
     </section>
   `;
 }
@@ -4632,42 +4935,30 @@ function renderProfile() {
   const rank = rankFromLevel(progress.level);
   const analysis = state.profileAnalysis;
   return `
-    <section class="page profile-diagnosis-page" style="--accent:${analysis?.color || rank.color}">
+    <section class="page profile-account-page" style="--accent:${analysis?.color || rank.color}">
       <div class="page-head-row">
         <div>
-          <div class="eyebrow">SYSTEM DIAGNOSIS · 파이터 프로필</div>
-          <h1 class="page-title">System Diagnosis</h1>
-          <p class="page-subtitle">physical details · PR records · AI-style category analysis</p>
+          <div class="eyebrow">PROFILE · 계정 / 저장 데이터</div>
+          <h1 class="page-title">My System File</h1>
+          <p class="page-subtitle">account status · cloud save · latest diagnosis · data tools</p>
         </div>
         <div class="roster-count"><strong>Lv ${progress.level}</strong><span>${escapeHtml(rank.label)}</span></div>
       </div>
 
-      <div class="diagnosis-layout">
-        <section class="system-panel diagnosis-form" style="--accent:${analysis?.color || rank.color}">
-          <div class="section-label">Input Window</div>
-          ${renderProfileValidation()}
-          ${renderProfileFieldGroup("Body Details", "body")}
-          ${renderProfileFieldGroup("Training Context", "context")}
-          ${renderProfileFieldGroup("Strength PRs", "prs")}
-          ${renderProfileFieldGroup("Benchmark Tests", "tests")}
+      <div class="profile-account-layout">
+        ${renderCloudPanel()}
+        <article class="system-panel rank-panel account-rank-card" style="--accent:${rank.color}">
+          <div class="meta-label">System Rank</div>
+          <h2 class="rank-title">${escapeHtml(rank.label)}</h2>
+          <span class="ko-small">Lv ${progress.level} · ${state.totalXp.toLocaleString()} XP total</span>
+          <div class="progress" style="--accent:${rank.color};--value:${progress.percent}%"><span></span></div>
           <div class="profile-actions">
-            <button type="button" class="analysis-button compact" data-analyze-offline>Analyze Offline</button>
-            <button type="button" class="analysis-button compact secondary" data-ai-coach>AI Coach</button>
-            <button type="button" class="analysis-button compact ghost" data-apply-journey ${analysis ? "" : "disabled"}>Apply Journey</button>
+            <button type="button" class="inline-action" data-view="diagnosis">${analysis ? "Run New Diagnosis" : "Start Diagnosis"}</button>
+            <button type="button" class="inline-action" data-view="reports">Open Reports</button>
           </div>
-        </section>
-
-        <aside class="diagnosis-side">
-          ${renderCloudPanel()}
-          <article class="system-panel rank-panel" style="--accent:${rank.color}">
-            <div class="meta-label">System Rank</div>
-            <h2 class="rank-title">${escapeHtml(rank.label)}</h2>
-            <span class="ko-small">Lv ${progress.level} · ${state.totalXp.toLocaleString()} XP total</span>
-            <div class="progress" style="--accent:${rank.color};--value:${progress.percent}%"><span></span></div>
-          </article>
-          ${analysis ? renderDiagnosisResult(analysis) : renderDiagnosisEmpty()}
-          ${renderAiConfigPanel()}
-        </aside>
+        </article>
+        ${analysis ? renderDiagnosisResult(analysis) : renderDiagnosisEmpty()}
+        ${renderAiConfigPanel()}
       </div>
 
       ${analysis ? renderJourneyRoadmap(analysis) : ""}
@@ -4803,6 +5094,10 @@ function renderAiConfigPanel() {
         <a href="${GEMINI_TEXT_URL}" target="_blank" rel="noreferrer">Gemini docs</a>
         <a href="${GEMINI_API_KEY_URL}" target="_blank" rel="noreferrer">API key safety</a>
         <a href="./LOOKISM_AI_SETUP.md" target="_blank" rel="noreferrer">Local proxy setup</a>
+      </div>
+      <div class="profile-actions two">
+        <button type="button" class="analysis-button compact secondary" data-ai-coach>Run AI Coach</button>
+        <button type="button" class="analysis-button compact ghost" data-chat-toggle>Open Chat</button>
       </div>
       ${state.aiCoachStatus ? `<p class="tiny">${escapeHtml(state.aiCoachStatus)}</p>` : ""}
     </article>
@@ -5011,6 +5306,7 @@ function analyzeProfile() {
     journey
   };
   state.profileResult = state.profileAnalysis.summary;
+  setUserFlow({ diagnosisCompleted: true, awakeningAccepted: true, onboardingComplete: true, onboardingStep: "system", diagnosisStep: "result", lastVisitedView: "diagnosis" });
   saveProfileState();
   recordDiagnosisReport();
   queueCloudSync();
@@ -5134,6 +5430,7 @@ function applyProfileJourney() {
   }
   saveProfileState();
   saveProgress();
+  setUserFlow({ diagnosisCompleted: true, awakeningAccepted: true, onboardingComplete: true, onboardingStep: "system", lastVisitedView: "home" });
   recordTrainingLog("journey_applied", state.profileAnalysis.currentCategory, { journey: state.appliedJourney });
   queueCloudSync();
 }
@@ -5325,11 +5622,39 @@ app.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target.closest("[data-continue-guest]")) {
+    setUserFlow({ guestMode: true, onboardingStep: "awakening", lastVisitedView: "awakening" });
+    state.view = "awakening";
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  const goalButton = event.target.closest("[data-awakening-goal]");
+  if (goalButton) {
+    const goal = goalButton.dataset.awakeningGoal;
+    setUserFlow({ selectedGoal: goal });
+    state.profile.goal = goal;
+    saveProfileState();
+    render();
+    return;
+  }
+
+  if (event.target.closest("[data-accept-system]")) {
+    setUserFlow({ awakeningAccepted: true, onboardingComplete: true, onboardingStep: "diagnosis", lastVisitedView: "diagnosis" });
+    if (state.userSettings.selectedGoal) {
+      state.profile.goal = state.userSettings.selectedGoal;
+      saveProfileState();
+    }
+    state.view = state.profileAnalysis ? "home" : "diagnosis";
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
   if (event.target.closest("[data-start-diagnosis]")) {
-    state.userSettings.onboardingComplete = true;
-    saveUserSettings();
-    syncUserSettings().catch(() => {});
-    state.view = "profile";
+    setUserFlow({ awakeningAccepted: true, onboardingComplete: true, onboardingStep: "diagnosis", lastVisitedView: "diagnosis" });
+    state.view = "diagnosis";
     render();
     window.scrollTo({ top: 0, behavior: "smooth" });
     return;
@@ -5428,12 +5753,41 @@ app.addEventListener("click", (event) => {
 
   const viewButton = event.target.closest("[data-view]");
   if (viewButton) {
-    state.view = viewButton.dataset.view;
+    state.view = resolveRequestedView(viewButton.dataset.view);
+    state.userSettings.lastVisitedView = state.view;
+    saveUserSettings();
     if (state.view === "train") {
       state.selectedMastery = "";
       state.selectedArtId = "";
       state.selectedFighterTypeId = "";
     }
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  const diagnosisStep = event.target.closest("[data-diagnosis-step]");
+  if (diagnosisStep) {
+    state.userSettings.diagnosisStep = diagnosisStep.dataset.diagnosisStep;
+    saveUserSettings();
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  if (event.target.closest("[data-diagnosis-next]")) {
+    const index = currentDiagnosisStepIndex();
+    state.userSettings.diagnosisStep = DIAGNOSIS_STEPS[Math.min(DIAGNOSIS_STEPS.length - 1, index + 1)].id;
+    saveUserSettings();
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  if (event.target.closest("[data-diagnosis-prev]")) {
+    const index = currentDiagnosisStepIndex();
+    state.userSettings.diagnosisStep = DIAGNOSIS_STEPS[Math.max(0, index - 1)].id;
+    saveUserSettings();
     render();
     window.scrollTo({ top: 0, behavior: "smooth" });
     return;

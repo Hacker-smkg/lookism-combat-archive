@@ -55,17 +55,27 @@ technique, martial skill, recovery, consistency, and personal growth.
 - Visual Vault for character, source, mode, mastery, and path references.
 - Vault filters for `All`, `UI`, `Mastery`, `Path`, `Brutal Fights`, `Kings`,
   and `Pre-Gen`.
-- System dashboard with XP, level, rank, streaks, stat meters, quests, and
-  progress bars.
-- First-run `Start Diagnosis` onboarding so users understand the System before
-  Cloud Save.
+- V3 information architecture: `Login / Guest → System Awakening → Diagnosis
+  Wizard → System Dashboard → Training / Reports`.
+- Login-first entry gate with Supabase account actions plus `Continue as Guest`
+  for local-only saves.
+- Cinematic System Awakening accept flow with goal selection and safety
+  conditions before training starts.
+- Clean System dashboard with only rank, XP, save state, today/weekly/boss
+  quests, next-rank checklist, and a short AI brief.
+- Dedicated multi-step Diagnosis Wizard for body details, training context,
+  strength PRs, benchmark tests, and result review.
+- Dedicated Reports page for XP history, streak heat, stat growth, boss PRs,
+  and latest diagnosis summaries.
+- Profile is now an account/system file: cloud status, rank summary, latest
+  diagnosis, Gemini config, export/delete tools, and AI coach output.
 - Clear separation between Profile `Diagnosis Score` and dashboard
   `System Stats`.
 - Solo-Leveling-style rank ladder from `Weak Daniel` to `Pinnacle Legend`.
 - Daily, weekly, technique, mastery, fighter-type, and boss quests.
 - Safe Penalty Zone concept that adds recovery or mobility debt instead of
   harmful punishment.
-- Profile diagnosis form for body data, training age, equipment, goals, injury
+- Diagnosis Wizard captures body data, training age, equipment, goals, injury
   limits, lift PRs, pull-ups, push-ups, plank, mile, and 5K time.
 - Offline AI-style analysis that classifies users into starting categories and
   recommends the next climb.

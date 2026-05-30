@@ -435,7 +435,7 @@ img {
 
 .archive-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 24px;
 }
@@ -1897,6 +1897,10 @@ img {
   margin-top: 8px;
 }
 
+.profile-actions.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .diagnosis-card h2,
 .journey-roadmap h2,
 .applied-journey h2 {
@@ -2436,6 +2440,372 @@ img {
   gap: 16px;
 }
 
+.entry-header {
+  margin-bottom: clamp(24px, 4vw, 44px);
+}
+
+.entry-rail {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.entry-rail span {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--dim);
+  background: rgba(255, 255, 255, 0.018);
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.entry-rail span.active {
+  border-color: rgba(35, 104, 255, 0.62);
+  color: var(--blue);
+  background: rgba(35, 104, 255, 0.09);
+  box-shadow: inset 0 -2px 0 var(--blue), 0 0 20px rgba(35, 104, 255, 0.16);
+}
+
+.entry-page {
+  min-height: calc(100vh - 170px);
+}
+
+.entry-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px;
+  gap: clamp(22px, 4vw, 56px);
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.entry-title {
+  font-size: clamp(5rem, 10vw, 9rem);
+}
+
+.entry-copy {
+  max-width: 760px;
+  margin: 18px 0 0;
+  color: rgba(246, 246, 247, 0.76);
+  font-size: clamp(1rem, 1.25vw, 1.2rem);
+  line-height: 1.75;
+}
+
+.entry-flow-map {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.entry-flow-map span {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--dim);
+  background: rgba(255, 255, 255, 0.018);
+  font-family: var(--display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.entry-flow-map span.active {
+  border-color: rgba(35, 104, 255, 0.54);
+  color: var(--blue);
+  background: rgba(35, 104, 255, 0.08);
+}
+
+.entry-orb,
+.awakening-orb {
+  justify-self: end;
+}
+
+.entry-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.auth-card h2,
+.guest-card h2,
+.contract-panel h2 {
+  margin: 10px 0 0;
+  color: color-mix(in srgb, var(--accent, var(--blue)) 82%, white);
+  font-family: var(--display);
+  font-size: clamp(2.1rem, 3.6vw, 3.4rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.auth-card p,
+.guest-card p,
+.contract-panel p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.cloud-auth-grid.single {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cloud-auth-grid.single .cloud-actions {
+  grid-column: 1 / -1;
+}
+
+.awakening-page {
+  display: grid;
+  place-items: center;
+}
+
+.awakening-core {
+  width: min(100%, 1040px);
+  text-align: center;
+}
+
+.awakening-core .entry-copy {
+  margin-inline: auto;
+}
+
+.awakening-core .awakening-orb {
+  margin: 0 auto 28px;
+}
+
+.contract-panel {
+  margin-top: 28px;
+  text-align: left;
+}
+
+.contract-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 22px;
+}
+
+.contract-grid span {
+  min-height: 58px;
+  padding: 14px;
+  border: 1px solid rgba(255, 51, 61, 0.28);
+  color: rgba(246, 246, 247, 0.82);
+  background: rgba(255, 51, 61, 0.055);
+  line-height: 1.45;
+}
+
+.goal-list {
+  margin-top: 14px;
+}
+
+.chip-list button.chip,
+.goal-list .chip {
+  cursor: pointer;
+}
+
+.chip.active {
+  border-color: color-mix(in srgb, var(--accent, var(--blue)) 58%, transparent);
+  color: color-mix(in srgb, var(--accent, var(--blue)) 84%, white);
+  background: color-mix(in srgb, var(--accent, var(--blue)) 12%, transparent);
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--accent, var(--blue)) 70%, transparent);
+}
+
+.diagnosis-wizard-page {
+  display: grid;
+  gap: 8px;
+}
+
+.diagnosis-wizard-layout {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.25fr) minmax(430px, 0.95fr) minmax(360px, 0.8fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.wizard-rail {
+  position: sticky;
+  top: 112px;
+  display: grid;
+  gap: 8px;
+}
+
+.wizard-rail button {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 56px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--dim);
+  background: rgba(255, 255, 255, 0.016);
+  text-align: left;
+}
+
+.wizard-rail button span {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid currentColor;
+  font-family: var(--mono);
+}
+
+.wizard-rail button b {
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.wizard-rail button.active,
+.wizard-rail button.done {
+  border-color: rgba(35, 104, 255, 0.48);
+  color: var(--blue);
+  background: rgba(35, 104, 255, 0.08);
+}
+
+.wizard-form h2 {
+  margin: 8px 0 4px;
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.wizard-form .profile-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wizard-form .profile-actions button:only-child {
+  grid-column: 1 / -1;
+}
+
+.wizard-preview {
+  min-width: 0;
+}
+
+.diagnosis-final,
+.diagnosis-final-empty {
+  min-height: 220px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--accent, var(--blue)) 34%, transparent);
+  background: color-mix(in srgb, var(--accent, var(--blue)) 7%, transparent);
+}
+
+.diagnosis-final h3 {
+  margin: 8px 0;
+  color: var(--accent);
+  font-family: var(--display);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.diagnosis-final p,
+.diagnosis-final-empty p {
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.dashboard-brief-panel {
+  gap: 18px;
+}
+
+.compact-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-next-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-next-grid > div {
+  min-height: 132px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent, var(--blue)) 30%, transparent);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.dashboard-next-grid p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.reports-page {
+  display: grid;
+  gap: 8px;
+}
+
+.reports-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.report-diagnosis-panel h2,
+.profile-account-layout h2 {
+  margin: 8px 0 4px;
+  font-family: var(--display);
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.report-diagnosis-panel p {
+  max-width: 920px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.profile-account-page {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-account-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(360px, 0.88fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.profile-account-layout .cloud-panel {
+  grid-column: 1 / -1;
+}
+
+.account-rank-card {
+  min-height: 0;
+}
+
+.field > span {
+  color: var(--dim);
+  font-family: var(--display);
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.field input:focus,
+.field select:focus,
+.assistant-form textarea:focus {
+  border-color: color-mix(in srgb, var(--accent, var(--blue)) 58%, white);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, var(--blue)) 18%, transparent);
+}
+
 .system-assistant {
   position: relative;
   z-index: 190;
@@ -2859,6 +3229,9 @@ img {
   .fighter-hero,
   .system-layout,
   .diagnosis-layout,
+  .diagnosis-wizard-layout,
+  .entry-grid,
+  .profile-account-layout,
   .technique-layout,
   .technique-hero {
     grid-template-columns: 1fr;
@@ -2870,8 +3243,19 @@ img {
   .journey-grid,
   .learning-grid,
   .history-grid,
+  .reports-summary-grid,
   .coach-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wizard-rail {
+    position: static;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .wizard-rail button {
+    grid-template-columns: 1fr;
+    align-content: start;
   }
 
   .fighter-hero {
@@ -2896,6 +3280,14 @@ img {
 
   .cloud-auth-grid {
     grid-template-columns: 1fr;
+  }
+
+  .cloud-auth-grid.single {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-account-layout .cloud-panel {
+    grid-column: auto;
   }
 }
 
@@ -2942,6 +3334,22 @@ img {
     display: none;
   }
 
+  .entry-header {
+    display: grid;
+    gap: 14px;
+  }
+
+  .entry-rail {
+    justify-content: flex-start;
+  }
+
+  .entry-rail span {
+    min-height: 30px;
+    padding: 0 8px;
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+  }
+
   .system-head {
     grid-template-columns: 1fr 72px;
     min-height: 148px;
@@ -2972,8 +3380,59 @@ img {
   }
 
   .archive-metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
+  }
+
+  .entry-hero {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .entry-title {
+    font-size: clamp(2.65rem, 14vw, 3.45rem);
+    letter-spacing: 0.06em;
+  }
+
+  .entry-copy {
+    font-size: 0.98rem;
+  }
+
+  .entry-orb {
+    justify-self: start;
+  }
+
+  .entry-flow-map span {
+    min-height: 30px;
+    padding: 0 9px;
+    font-size: 0.74rem;
+    letter-spacing: 0.1em;
+  }
+
+  .contract-grid,
+  .compact-stats,
+  .dashboard-next-grid,
+  .reports-summary-grid,
+  .profile-account-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .diagnosis-wizard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard-rail {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(124px, 40%);
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .wizard-rail button {
+    min-height: 76px;
+    scroll-snap-align: start;
   }
 
   .metric-card {
@@ -3168,7 +3627,7 @@ img {
     z-index: 20;
     display: grid;
     height: 84px;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(0, 0, 0, 0.94);
     backdrop-filter: blur(18px);
@@ -3186,7 +3645,7 @@ img {
     color: rgba(246, 246, 247, 0.25);
     background: transparent;
     font-family: var(--display);
-    font-size: 0.58rem;
+    font-size: 0.52rem;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
