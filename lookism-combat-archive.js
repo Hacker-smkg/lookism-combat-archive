@@ -915,7 +915,21 @@ const PROFILE_STORAGE_KEY = "lookismProfileDiagnosis:v1";
 const AI_CONFIG_STORAGE_KEY = "lookismHybridAiConfig:v1";
 const CHAT_STORAGE_KEY = "lookismSystemChat:v1";
 const ASSISTANT_POSITION_STORAGE_KEY = "lookismAssistantPosition:v1";
+const ONBOARDING_STORAGE_KEY = "lookismOnboarding:v1";
+const TRAINING_PROGRESS_STORAGE_KEY = "lookismTrainingProgress:v1";
+const USER_SETTINGS_STORAGE_KEY = "lookismUserSettings:v1";
+const TRAINING_LOG_STORAGE_KEY = "lookismTrainingLogs:v1";
 const CLOUD_CONFIG_ENDPOINT = "/api/config";
+
+const VAULT_FILTERS = [
+  ["all", "All"],
+  ["ui", "UI"],
+  ["mastery", "Mastery"],
+  ["path", "Path"],
+  ["brutal", "Brutal Fights"],
+  ["kings", "Kings"],
+  ["pre-gen", "Pre-Gen"]
+];
 
 function isStaticLocalPreview() {
   const localHosts = new Set(["127.0.0.1", "localhost", "::1"]);
@@ -989,6 +1003,26 @@ const PROFILE_FIELDS = [
   { key: "mile", label: "Mile Time (min)", group: "tests", type: "number", placeholder: "9" },
   { key: "fiveK", label: "5K Time (min)", group: "tests", type: "number", placeholder: "32" }
 ];
+
+const PROFILE_NUMERIC_LIMITS = {
+  age: [10, 80],
+  height: [110, 230],
+  weight: [30, 250],
+  bodyFat: [3, 60],
+  daysPerWeek: [1, 7],
+  sessionLength: [10, 240],
+  bench: [0, 400],
+  squat: [0, 500],
+  deadlift: [0, 600],
+  press: [0, 250],
+  pullups: [0, 80],
+  pushups: [0, 200],
+  plank: [0, 900],
+  mile: [3, 30],
+  fiveK: [0, 120]
+};
+
+const PROFILE_REQUIRED_FOR_DIAGNOSIS = ["age", "height", "weight"];
 
 const USER_CATEGORIES = [
   { id: "weak-daniel-low-base", label: "Weak Daniel · Low Base", ko: "약한 형석", level: 1, next: "Civilian Reset", color: "#8b949e", focus: "mobility, walking, push-pull-leg basics, confidence reps" },
@@ -1632,6 +1666,9 @@ const storedProgress = loadProgress();
 const storedProfile = loadProfileState();
 const storedAiConfig = loadAiConfig();
 const storedChatMessages = loadChatMessages();
+const storedUserSettings = loadUserSettings();
+const storedTrainingProgress = loadTrainingProgress();
+const storedTrainingLogs = loadTrainingLogs();
 
 const state = {
   view: "home",
@@ -1642,6 +1679,7 @@ const state = {
   selectedFighterTypeId: "",
   trainTab: "fighter-types",
   selectedTechniqueLevel: "very-beginner",
+  vaultFilter: storedUserSettings.vaultFilter || "all",
   expandedStage: 0,
   totalXp: storedProgress.totalXp,
   level: storedProgress.level,
@@ -1658,6 +1696,7 @@ const state = {
   aiConfig: storedAiConfig,
   aiCoachStatus: "",
   aiCoachResult: storedProfile.aiCoachResult,
+  profileValidation: { errors: [], warnings: [] },
   chatOpen: false,
   chatMessages: storedChatMessages,
   chatDraft: "",
@@ -1668,6 +1707,9 @@ const state = {
   assistantPosition: loadAssistantPosition(),
   assistantDragging: false,
   assistantDragSuppress: false,
+  userSettings: storedUserSettings,
+  trainingProgress: storedTrainingProgress,
+  trainingLogs: storedTrainingLogs,
   profileResult: "",
   cloudConfig: null,
   cloudClient: null,
@@ -1812,6 +1854,44 @@ function createChatId() {
   );
 }
 
+function normalizeCoachCards(cards) {
+  if (!Array.isArray(cards)) return [];
+  return cards
+    .map((card) => ({
+      title: String(card?.title || "").trim().slice(0, 48),
+      body: String(card?.body || card?.text || "").trim().slice(0, 520),
+      action: String(card?.action || "").trim().slice(0, 40)
+    }))
+    .filter((card) => card.title && card.body)
+    .slice(0, 4);
+}
+
+function coachCardsFromText(text) {
+  const clean = String(text || "").trim();
+  if (!clean) return [];
+  const labels = ["Condition", "Today's Quest", "Training Focus", "Recovery", "Recovery/Diet", "Next Rank"];
+  const cards = [];
+  const lines = clean.split(/\n+/).map((line) => line.replace(/^[-*]\s*/, "").trim()).filter(Boolean);
+  for (const line of lines) {
+    const match = line.match(/^([^:]{3,34}):\s*(.+)$/);
+    if (!match) continue;
+    const title = match[1].replace(/\*\*/g, "").trim();
+    if (!labels.some((label) => title.toLowerCase().includes(label.toLowerCase().split("/")[0]))) continue;
+    cards.push({ title, body: match[2].replace(/\*\*/g, "").trim() });
+  }
+  if (cards.length) return normalizeCoachCards(cards);
+  const fallbackParts = clean.split(/\n{2,}/).filter(Boolean);
+  if (fallbackParts.length >= 3) {
+    return normalizeCoachCards([
+      { title: "Condition", body: fallbackParts[0] },
+      { title: "Today's Quest", body: fallbackParts[1] },
+      { title: "Recovery", body: fallbackParts[2] },
+      { title: "Next Rank", body: fallbackParts[3] || "Clear quests and boss tests before chasing harder work." }
+    ]);
+  }
+  return [];
+}
+
 function normalizeChatMessage(message) {
   if (!message || typeof message !== "object") return null;
   const role = ["user", "assistant"].includes(message.role) ? message.role : "assistant";
@@ -1823,6 +1903,7 @@ function normalizeChatMessage(message) {
     text: text.slice(0, 2400),
     createdAt: message.createdAt || message.created_at || new Date().toISOString(),
     suggestions: Array.isArray(message.suggestions) ? message.suggestions.slice(0, 4) : [],
+    cards: normalizeCoachCards(message.cards || message.contextSnapshot?.cards || message.context_snapshot?.cards),
     contextSnapshot: message.contextSnapshot || message.context_snapshot || null
   };
 }
@@ -1842,6 +1923,76 @@ function saveChatMessages() {
     localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(state.chatMessages.slice(-80)));
   } catch {
     // Chat remains usable even if localStorage is unavailable.
+  }
+}
+
+function defaultUserSettings() {
+  return {
+    onboardingComplete: false,
+    focusMode: false,
+    vaultFilter: "all",
+    lastSyncedAt: ""
+  };
+}
+
+function loadUserSettings() {
+  const fallback = defaultUserSettings();
+  try {
+    const parsed = JSON.parse(localStorage.getItem(USER_SETTINGS_STORAGE_KEY) || "null");
+    const onboarding = JSON.parse(localStorage.getItem(ONBOARDING_STORAGE_KEY) || "null");
+    return {
+      ...fallback,
+      ...(parsed || {}),
+      onboardingComplete: Boolean(parsed?.onboardingComplete || onboarding?.complete)
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveUserSettings() {
+  try {
+    localStorage.setItem(USER_SETTINGS_STORAGE_KEY, JSON.stringify(state.userSettings));
+    localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify({
+      complete: Boolean(state.userSettings.onboardingComplete),
+      updatedAt: new Date().toISOString()
+    }));
+  } catch {
+    // UI preferences are best-effort.
+  }
+}
+
+function loadTrainingProgress() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(TRAINING_PROGRESS_STORAGE_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveTrainingProgress() {
+  try {
+    localStorage.setItem(TRAINING_PROGRESS_STORAGE_KEY, JSON.stringify(state.trainingProgress || {}));
+  } catch {
+    // Training progress can still be held in memory for this session.
+  }
+}
+
+function loadTrainingLogs() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(TRAINING_LOG_STORAGE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed.slice(-240) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveTrainingLogs() {
+  try {
+    localStorage.setItem(TRAINING_LOG_STORAGE_KEY, JSON.stringify((state.trainingLogs || []).slice(-240)));
+  } catch {
+    // Chart history is optional.
   }
 }
 
@@ -1870,12 +2021,13 @@ function saveAssistantPosition(position) {
   }
 }
 
-function addChatMessage(role, text, suggestions = [], contextSnapshot = null) {
+function addChatMessage(role, text, suggestions = [], contextSnapshot = null, cards = []) {
   const message = normalizeChatMessage({
     id: createChatId(),
     role,
     text,
     suggestions,
+    cards,
     contextSnapshot,
     createdAt: new Date().toISOString()
   });
@@ -1964,6 +2116,35 @@ function cloudProfilePayload() {
     latest_analysis: state.profileAnalysis || null,
     applied_journey: state.appliedJourney || null
   };
+}
+
+function cloudUserSettingsPayload() {
+  return {
+    user_id: state.cloudUser.id,
+    settings: {
+      ...state.userSettings,
+      vaultFilter: state.vaultFilter
+    },
+    updated_at: new Date().toISOString()
+  };
+}
+
+function trainingProgressRows() {
+  if (!hasCloudUser()) return [];
+  return Object.entries(state.trainingProgress || {}).map(([key, progress]) => {
+    const [program_type, ...idParts] = key.split(":");
+    return {
+      user_id: state.cloudUser.id,
+      program_key: key,
+      program_type,
+      program_id: idParts.join(":"),
+      xp: Math.max(0, Number(progress.xp) || 0),
+      completed_level_ids: Array.isArray(progress.completedLevelIds) ? progress.completedLevelIds : [],
+      last_trained_at: progress.lastTrainedAt || null,
+      notes: progress.notes || "",
+      updated_at: new Date().toISOString()
+    };
+  });
 }
 
 async function initCloudSync() {
@@ -2101,12 +2282,32 @@ async function loadCloudState() {
   state.cloudStatus = "Loading cloud save...";
   render();
   try {
-    const [profileResult, progressResult] = await Promise.all([
+    const [profileResult, progressResult, settingsResult, trainingResult] = await Promise.all([
       state.cloudClient.from("profiles").select("*").eq("user_id", state.cloudUser.id).maybeSingle(),
-      state.cloudClient.from("progress").select("*").eq("user_id", state.cloudUser.id).maybeSingle()
+      state.cloudClient.from("progress").select("*").eq("user_id", state.cloudUser.id).maybeSingle(),
+      state.cloudClient.from("user_settings").select("*").eq("user_id", state.cloudUser.id).maybeSingle(),
+      state.cloudClient.from("training_progress").select("*").eq("user_id", state.cloudUser.id)
     ]);
     if (profileResult.error) throw profileResult.error;
     if (progressResult.error) throw progressResult.error;
+    if (!settingsResult.error && settingsResult.data?.settings) {
+      state.userSettings = { ...defaultUserSettings(), ...settingsResult.data.settings };
+      state.vaultFilter = state.userSettings.vaultFilter || state.vaultFilter;
+      saveUserSettings();
+    }
+    if (!trainingResult.error && Array.isArray(trainingResult.data)) {
+      const remoteProgress = {};
+      for (const row of trainingResult.data) {
+        remoteProgress[row.program_key] = {
+          xp: Math.max(0, Number(row.xp) || 0),
+          completedLevelIds: Array.isArray(row.completed_level_ids) ? row.completed_level_ids : [],
+          lastTrainedAt: row.last_trained_at || "",
+          notes: row.notes || ""
+        };
+      }
+      state.trainingProgress = { ...state.trainingProgress, ...remoteProgress };
+      saveTrainingProgress();
+    }
     const remoteXp = Number(progressResult.data?.total_xp) || 0;
     if (progressResult.data && remoteXp >= (Number(state.totalXp) || 0)) {
       applyRemoteProgress(progressResult.data);
@@ -2144,9 +2345,34 @@ async function syncCloudState(reason = "manual") {
   ]);
   if (profileResult.error) throw profileResult.error;
   if (progressResult.error) throw progressResult.error;
+  await Promise.allSettled([syncUserSettings(), syncAllTrainingProgress()]);
   state.cloudLastSyncedAt = new Date().toLocaleTimeString();
   state.cloudStatus = reason === "manual" ? "Cloud save updated." : "Progress synced to cloud.";
   render();
+}
+
+async function syncUserSettings() {
+  if (!hasCloudUser()) return;
+  state.userSettings.lastSyncedAt = new Date().toLocaleTimeString();
+  saveUserSettings();
+  const result = await state.cloudClient
+    .from("user_settings")
+    .upsert(cloudUserSettingsPayload(), { onConflict: "user_id" });
+  if (result.error) throw result.error;
+}
+
+async function syncTrainingProgress(key) {
+  if (!hasCloudUser()) return;
+  const rows = trainingProgressRows().filter((row) => !key || row.program_key === key);
+  if (!rows.length) return;
+  const result = await state.cloudClient
+    .from("training_progress")
+    .upsert(rows, { onConflict: "user_id,program_key" });
+  if (result.error) throw result.error;
+}
+
+async function syncAllTrainingProgress() {
+  return syncTrainingProgress("");
 }
 
 async function recordQuestCompletion(quest) {
@@ -2186,13 +2412,14 @@ async function recordDiagnosisReport() {
 }
 
 async function recordTrainingLog(logType, title, detail = {}) {
+  const localLog = localTrainingLog(logType, title, detail);
   if (!hasCloudUser()) return;
   try {
     const result = await state.cloudClient.from("training_logs").insert({
       user_id: state.cloudUser.id,
       log_type: logType,
       title,
-      detail
+      detail: { ...detail, localLogId: localLog.id, totalXp: localLog.totalXp, stats: localLog.stats }
     });
     if (result.error) throw result.error;
   } catch (error) {
@@ -2207,7 +2434,7 @@ function chatCloudPayload(message) {
     user_id: state.cloudUser.id,
     role: message.role,
     content: message.text,
-    context_snapshot: message.contextSnapshot || {},
+    context_snapshot: { ...(message.contextSnapshot || {}), cards: message.cards || [] },
     suggestions: message.suggestions || [],
     created_at: message.createdAt
   };
@@ -2334,7 +2561,8 @@ function buildChatContextSnapshot() {
       completed: isQuestComplete(quest.id)
     })),
     promotionReview: buildPromotionReviewData(),
-    activeWeeklySchedule: activeWeeklySchedule()
+    activeWeeklySchedule: activeWeeklySchedule(),
+    trainingProgress: state.trainingProgress
   };
 }
 
@@ -2346,6 +2574,58 @@ function buildConditionBrief() {
   }
   const blockers = (analysis.blockers || []).slice(0, 2).join("; ");
   return `Current condition: ${analysis.currentCategory} (${analysis.overall}/100) at Lv ${progress.level} - ${currentRank.label}. Your route is ${analysis.journey.recommendedFighterType}, ${analysis.journey.recommendedMastery}, and ${analysis.journey.recommendedArt}. Next rank: ${nextRank?.label || "Pinnacle Legend"}${xpNeeded ? `, ${xpNeeded.toLocaleString()} XP away` : ""}. Main blockers: ${blockers || "consistency and clean overload"}.`;
+}
+
+function buildConditionBriefCards() {
+  const { progress, currentRank, nextRank, xpNeeded } = nextRankInfo();
+  const analysis = state.profileAnalysis;
+  if (!analysis) {
+    return [
+      {
+        title: "Condition",
+        body: `Lv ${progress.level} · ${currentRank.label}. Diagnosis has not run yet, so the coach only sees your XP and rank.`,
+        action: "open-profile"
+      },
+      {
+        title: "Today's Quest",
+        body: "Open System Diagnosis, enter body stats and benchmarks, then run Analyze Offline before chasing cloud save.",
+        action: "open-profile"
+      },
+      {
+        title: "Recovery",
+        body: "Keep the first day easy: mobility, walking, clean push-pull-leg basics, and no ego intensity."
+      },
+      {
+        title: "Next Rank",
+        body: `${nextRank?.label || "Pinnacle Legend"} is the next climb${xpNeeded ? `, ${xpNeeded.toLocaleString()} XP away` : ""}. The System needs logged quests, not hype.`,
+        action: "promotion-review"
+      }
+    ];
+  }
+
+  const quest = activeQuestCatalog().find((item) => !isQuestComplete(item.id)) || activeQuestCatalog()[0];
+  const blockers = (analysis.blockers || []).slice(0, 2).join("; ") || "consistency and clean overload";
+  return [
+    {
+      title: "Condition",
+      body: `${analysis.currentCategory} · Diagnosis Score ${analysis.overall}/100 at Lv ${progress.level}. Main blockers: ${blockers}.`
+    },
+    {
+      title: "Today's Quest",
+      body: quest ? `${quest.title}: ${quest.desc}` : "Clear one daily quest and one precision drill before adding intensity.",
+      action: "quest-focus"
+    },
+    {
+      title: "Recovery",
+      body: "Sleep, hydration, and joint-friendly volume decide whether the next session upgrades you or buries you.",
+      action: "recovery-plan"
+    },
+    {
+      title: "Next Rank",
+      body: `${nextRank?.label || "Pinnacle Legend"}${xpNeeded ? ` needs ${xpNeeded.toLocaleString()} more XP` : " is controlled by completed boss tests and consistency"}. Route: ${analysis.journey.recommendedFighterType}, ${analysis.journey.recommendedMastery}, ${analysis.journey.recommendedArt}.`,
+      action: "promotion-review"
+    }
+  ];
 }
 
 function buildPromotionReviewMessage() {
@@ -2361,6 +2641,36 @@ function buildPromotionReviewMessage() {
   return review.readyForNext
     ? `Promotion review: rules are satisfied for the next climb from ${review.currentRank} toward ${review.nextRank}. The rank itself still follows XP level, so keep clearing quests and the dashboard will update automatically.`
     : `Promotion review: ${review.currentRank} to ${review.nextRank} is not unlocked yet. Need: ${requirements.join(", ") || "more verified quest progress"}. Average System stat: ${review.statAverage}/100. No AI shortcut; the System only respects logged work.`;
+}
+
+function buildPromotionReviewCards(message) {
+  const review = buildPromotionReviewData();
+  const missing = [];
+  if (review.xpNeeded > 0) missing.push(`${review.xpNeeded.toLocaleString()} XP`);
+  if (review.weeklyDone < Math.min(1, review.weeklyTotal)) missing.push("weekly quest");
+  if (review.bossDone < Math.min(1, review.bossTotal)) missing.push("boss quest");
+  if (review.diagnosisScore !== null && review.diagnosisScore < 45) missing.push("45+ diagnosis score");
+  return [
+    {
+      title: "Condition",
+      body: `${review.currentRank} · System stat average ${review.statAverage}/100 · Diagnosis ${review.diagnosisScore ?? "not run"}.`
+    },
+    {
+      title: "Today's Quest",
+      body: missing.length ? `Clear the blocker: ${missing[0]}. Then log one clean daily quest.` : "Promotion blockers are clear. Keep logging XP until the level threshold updates.",
+      action: "quest-focus"
+    },
+    {
+      title: "Recovery",
+      body: "Do not test maxes daily. Use recovery work after boss attempts so the next review reads performance, not fatigue.",
+      action: "recovery-plan"
+    },
+    {
+      title: "Next Rank",
+      body: message.replace(/^Promotion review:\s*/i, ""),
+      action: "quest-focus"
+    }
+  ];
 }
 
 function fallbackAssistantReply(userText, error) {
@@ -2408,10 +2718,13 @@ async function sendChatPrompt(promptText = state.chatDraft) {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || `Coach returned ${response.status}`);
     const suggestions = Array.isArray(data.suggestions) ? data.suggestions : [];
-    addChatMessage("assistant", data.text || data.output || "I read your System, but Gemini returned no coaching text.", suggestions, context);
+    const assistantText = data.text || data.output || "I read your System, but Gemini returned no coaching text.";
+    const cards = normalizeCoachCards(data.cards).length ? normalizeCoachCards(data.cards) : coachCardsFromText(assistantText);
+    addChatMessage("assistant", assistantText, suggestions, context, cards);
     state.chatStatus = data.source ? `Gemini online via ${data.source}.` : "Assistant response ready.";
   } catch (error) {
-    addChatMessage("assistant", fallbackAssistantReply(text, error), ["promotion_review", "recovery_plan"], context);
+    const fallback = fallbackAssistantReply(text, error);
+    addChatMessage("assistant", fallback, ["promotion_review", "recovery_plan"], context, coachCardsFromText(fallback));
     state.chatStatus = "Gemini unavailable. Local System fallback answered safely.";
   } finally {
     state.chatBusy = false;
@@ -2423,12 +2736,14 @@ async function sendChatPrompt(promptText = state.chatDraft) {
 function runChatAction(action) {
   state.chatOpen = true;
   if (action === "promotion-review") {
-    addChatMessage("assistant", buildPromotionReviewMessage(), ["quest_focus"], buildChatContextSnapshot());
+    const message = buildPromotionReviewMessage();
+    addChatMessage("assistant", message, ["quest_focus"], buildChatContextSnapshot(), buildPromotionReviewCards(message));
     render();
     return;
   }
   if (action === "brief-condition") {
-    addChatMessage("assistant", buildConditionBrief(), ["promotion_review", "recovery_plan"], buildChatContextSnapshot());
+    const message = buildConditionBrief();
+    addChatMessage("assistant", message, ["promotion_review", "recovery_plan"], buildChatContextSnapshot(), buildConditionBriefCards());
     render();
     return;
   }
@@ -2539,8 +2854,187 @@ function resetSystemProgress() {
   queueCloudSync();
 }
 
+function resetLocalAppData() {
+  const freshProgress = defaultSystemProgress();
+  const freshProfile = defaultProfileState();
+  state.totalXp = freshProgress.totalXp;
+  state.level = freshProgress.level;
+  state.completedQuestIds = freshProgress.completedQuestIds;
+  state.streak = freshProgress.streak;
+  state.selectedPath = freshProgress.selectedPath;
+  state.stats = freshProgress.stats;
+  state.penaltyDebt = freshProgress.penaltyDebt;
+  state.lastActiveDate = freshProgress.lastActiveDate;
+  state.streakAwardedDate = freshProgress.streakAwardedDate;
+  state.profile = freshProfile.profile;
+  state.profileAnalysis = null;
+  state.appliedJourney = null;
+  state.aiCoachResult = "";
+  state.profileValidation = { errors: [], warnings: [] };
+  state.trainingProgress = {};
+  state.trainingLogs = [];
+  state.chatMessages = [];
+  saveProgress();
+  saveProfileState();
+  saveTrainingProgress();
+  saveTrainingLogs();
+  saveChatMessages();
+}
+
+function exportAppData() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    progress: cloudProgressPayloadSafe(),
+    profile: {
+      profile: state.profile,
+      profileAnalysis: state.profileAnalysis,
+      appliedJourney: state.appliedJourney
+    },
+    userSettings: { ...state.userSettings, vaultFilter: state.vaultFilter },
+    trainingProgress: state.trainingProgress,
+    trainingLogs: state.trainingLogs,
+    chatMessages: state.chatMessages
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `lookism-system-export-${todayKey()}.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function cloudProgressPayloadSafe() {
+  return {
+    totalXp: state.totalXp,
+    level: levelFromXp(state.totalXp),
+    stats: state.stats,
+    completedQuestIds: state.completedQuestIds,
+    streak: state.streak,
+    selectedPath: state.selectedPath,
+    penaltyDebt: state.penaltyDebt,
+    lastActiveDate: state.lastActiveDate
+  };
+}
+
+async function deleteCloudAppData() {
+  if (!hasCloudUser()) {
+    resetLocalAppData();
+    state.cloudStatus = "Local device save cleared.";
+    render();
+    return;
+  }
+  state.cloudBusy = true;
+  state.cloudStatus = "Deleting app data from Supabase...";
+  render();
+  try {
+    const tables = ["chat_messages", "training_progress", "user_settings", "training_logs", "diagnosis_reports", "quest_completions", "progress", "profiles"];
+    for (const table of tables) {
+      const result = await state.cloudClient.from(table).delete().eq("user_id", state.cloudUser.id);
+      if (result.error && !/does not exist|schema cache/i.test(result.error.message || "")) throw result.error;
+    }
+    resetLocalAppData();
+    state.cloudStatus = "App data deleted. Auth account remains; sign out or keep using local mode.";
+  } catch (error) {
+    state.cloudStatus = `Delete app data failed: ${error.message}`;
+  } finally {
+    state.cloudBusy = false;
+    render();
+  }
+}
+
 function activeWeeklySchedule() {
   return state.appliedJourney?.weeklySchedule || WEEKLY_SCHEDULES;
+}
+
+function programStorageKey(type, id) {
+  return `${type}:${id}`;
+}
+
+function programProgress(type, id) {
+  const key = programStorageKey(type, id);
+  const stored = state.trainingProgress[key] || {};
+  const completed = Array.isArray(stored.completedLevelIds) ? stored.completedLevelIds : [];
+  return {
+    key,
+    type,
+    id,
+    xp: Math.max(0, Number(stored.xp) || 0),
+    completedLevelIds: completed,
+    lastTrainedAt: stored.lastTrainedAt || "",
+    notes: stored.notes || ""
+  };
+}
+
+function programLevel(type, id) {
+  const progress = programProgress(type, id);
+  return clamp(progress.completedLevelIds.length, 0, TECHNIQUE_LEVELS.length);
+}
+
+function programPercent(type, id) {
+  return Math.round((programLevel(type, id) / TECHNIQUE_LEVELS.length) * 100);
+}
+
+function renderProgramBadge(type, id, label = "Progress") {
+  const progress = programProgress(type, id);
+  const percent = programPercent(type, id);
+  return `
+    <span class="program-badge" title="${escapeHtml(label)} progress">
+      <b>Lv ${programLevel(type, id)}</b>
+      <span>${percent}% · ${progress.xp.toLocaleString()} XP</span>
+    </span>
+  `;
+}
+
+function completeProgramLevel(type, id, levelId, title, color, stat = "technique") {
+  const level = TECHNIQUE_LEVELS.find((item) => item.id === levelId);
+  if (!level) return;
+  const key = programStorageKey(type, id);
+  const current = programProgress(type, id);
+  if (current.completedLevelIds.includes(levelId)) return;
+  const completedLevelIds = [...current.completedLevelIds, levelId];
+  const xp = level.xp;
+  state.trainingProgress[key] = {
+    ...current,
+    xp: current.xp + xp,
+    completedLevelIds,
+    lastTrainedAt: new Date().toISOString()
+  };
+  state.totalXp += xp;
+  state.level = levelFromXp(state.totalXp);
+  state.stats[stat] = clamp((Number(state.stats[stat]) || 5) + Math.max(1, Math.round(xp / 180)), 1, 100);
+  saveTrainingProgress();
+  saveProgress();
+  recordTrainingLog("program_level", `${title} · ${level.label}`, {
+    programType: type,
+    programId: id,
+    levelId,
+    xp,
+    stat,
+    color
+  });
+  syncTrainingProgress(key).catch((error) => {
+    state.cloudStatus = `Training progress sync failed: ${error.message}`;
+    render();
+  });
+  queueCloudSync();
+}
+
+function localTrainingLog(logType, title, detail = {}) {
+  const log = {
+    id: createChatId(),
+    logType,
+    title,
+    detail,
+    date: todayKey(),
+    createdAt: new Date().toISOString(),
+    totalXp: Math.max(0, Number(state.totalXp) || 0),
+    stats: { ...(state.stats || {}) },
+    streak: state.streak
+  };
+  state.trainingLogs = [...(state.trainingLogs || []), log].slice(-240);
+  saveTrainingLogs();
+  return log;
 }
 
 function buildPersonalizedQuests(journey) {
@@ -2740,7 +3234,7 @@ function icon(name) {
 function render() {
   app.innerHTML = `
     ${renderMangaBackgroundWall()}
-    <main class="app-shell">
+    <main class="app-shell ${state.userSettings.focusMode ? "focus-mode" : ""}">
       ${renderTopNav()}
       <div class="view-frame">
         ${renderActiveView()}
@@ -2765,7 +3259,7 @@ function renderMangaBackgroundWall() {
   }).join("");
 
   return `
-    <div class="manga-bg-wall" aria-hidden="true">
+    <div class="manga-bg-wall ${state.userSettings.focusMode ? "focus-mode-bg" : ""}" aria-hidden="true">
       <div class="manga-bg-grid">
         ${tiles}
       </div>
@@ -2820,6 +3314,10 @@ function renderTopNav() {
             <span>${label}</span>
           </button>
         `).join("")}
+        <button type="button" class="${state.userSettings.focusMode ? "active" : ""}" data-toggle-focus title="Dim background images behind dense panels">
+          ${icon("path")}
+          <span>Focus</span>
+        </button>
       </nav>
     </header>
   `;
@@ -2845,9 +3343,11 @@ function assistantFabStyle() {
   if (!position) return "";
   const width = window.innerWidth <= 720 ? 62 : 188;
   const height = window.innerWidth <= 720 ? 62 : 68;
-  const margin = 12;
+  const margin = window.innerWidth <= 720 ? 16 : 12;
+  const minY = window.innerWidth <= 720 ? 74 : 82;
+  const bottomSafe = window.innerWidth <= 720 ? 104 : 18;
   const x = clamp(position.x, margin, Math.max(margin, window.innerWidth - width - margin));
-  const y = clamp(position.y, margin, Math.max(margin, window.innerHeight - height - margin));
+  const y = clamp(position.y, minY, Math.max(minY, window.innerHeight - height - bottomSafe));
   state.assistantPosition = { x, y };
   return `left:${x}px;top:${y}px;right:auto;bottom:auto;transform:none;`;
 }
@@ -2931,9 +3431,10 @@ function renderChatStarter() {
 
 function renderChatMessage(message) {
   const suggestions = (message.suggestions || []).map(renderChatSuggestion).join("");
+  const cards = message.role === "assistant" ? renderCoachCards(message.text, message.cards) : "";
   return `
     <article class="chat-message ${message.role}">
-      <div>${escapeHtml(message.text).replace(/\n/g, "<br>")}</div>
+      ${cards || `<div>${escapeHtml(message.text).replace(/\n/g, "<br>")}</div>`}
       ${suggestions ? `<div class="chat-suggestions">${suggestions}</div>` : ""}
       <time>${escapeHtml(new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }))}</time>
     </article>
@@ -2991,7 +3492,7 @@ function renderSystemDashboard() {
         <div class="orb" aria-hidden="true"></div>
       </header>
 
-      ${renderCloudPanel()}
+      ${state.userSettings.onboardingComplete ? "" : renderOnboardingPanel()}
 
       <div class="archive-metrics" aria-label="Archive metrics">
         ${metricCard("Level", levelProgress.level, rank.label)}
@@ -3013,7 +3514,7 @@ function renderSystemDashboard() {
         </article>
 
         <article class="system-panel stat-panel" style="--accent:${rank.color}">
-          <div class="section-label">Status Window</div>
+          <div class="section-label">System Stats <span class="help-tip" title="Dashboard stats grow from completed quests and training levels. They are separate from Profile Diagnosis Score.">?</span></div>
           <div class="stat-grid">
             ${SYSTEM_STATS.map(renderStatMeter).join("")}
           </div>
@@ -3027,6 +3528,8 @@ function renderSystemDashboard() {
       </article>
 
       ${journey ? renderAppliedJourney(journey) : renderNoJourneyPrompt()}
+
+      ${renderCloudPanel()}
 
       ${state.penaltyDebt ? renderPenaltyZone() : ""}
 
@@ -3047,6 +3550,8 @@ function renderSystemDashboard() {
         ${activeWeeklySchedule().map(renderScheduleDay).join("")}
       </div>
 
+      ${renderProgressHistory()}
+
       <div class="section-top">
         <div class="section-label">Pinnacle References</div>
         <button type="button" class="inline-action" data-view="fighters">Open Roster</button>
@@ -3058,22 +3563,43 @@ function renderSystemDashboard() {
   `;
 }
 
+function renderOnboardingPanel() {
+  return `
+    <article class="system-panel onboarding-panel" style="--accent:#2368ff">
+      <div>
+        <div class="section-label">First Run · System Awakening</div>
+        <h2>Start with diagnosis before cloud save.</h2>
+        <p>Enter your body details and benchmarks first. The System will classify your current form, assign blockers, and build a higher-category journey before you worry about syncing accounts.</p>
+      </div>
+      <div class="onboarding-actions">
+        <button type="button" class="analysis-button compact" data-start-diagnosis>Start Diagnosis</button>
+        <button type="button" class="inline-action" data-complete-onboarding>I know the System</button>
+      </div>
+    </article>
+  `;
+}
+
 function renderCloudPanel() {
   const signedIn = Boolean(state.cloudUser);
   const status = state.cloudStatus || "Cloud sync is loading...";
   const lastSync = state.cloudLastSyncedAt ? `Last sync ${state.cloudLastSyncedAt}` : "No cloud sync yet";
+  const initials = cloudUserEmail().slice(0, 2).toUpperCase() || "SY";
   return `
     <article class="system-panel cloud-panel" style="--accent:#19c566">
       <div class="section-top compact">
+        <span class="cloud-avatar">${escapeHtml(initials)}</span>
         <div>
           <div class="section-label">Cloud Save</div>
-          <p>${signedIn ? `Signed in as ${escapeHtml(cloudUserEmail())}. XP, profile diagnosis, quests, and reports sync to Supabase.` : "Sign in to sync XP, levels, profile diagnosis, quests, reports, and logs across devices."}</p>
+          <p>${signedIn ? `Signed in as ${escapeHtml(cloudUserEmail())}. XP, profile diagnosis, style progress, chat, quests, and reports sync to Supabase.` : "Optional after diagnosis: sign in to sync XP, levels, style progress, profile diagnosis, quests, reports, and logs across devices."}</p>
         </div>
         <span class="cloud-badge ${signedIn ? "online" : ""}">${signedIn ? "Online" : state.cloudReady ? "Ready" : "Offline"}</span>
       </div>
       ${signedIn ? `
         <div class="cloud-actions">
           <button type="button" class="inline-action" data-cloud-sync ${state.cloudBusy ? "disabled" : ""}>Sync Now</button>
+          <button type="button" class="inline-action" data-cloud-restore ${state.cloudBusy ? "disabled" : ""}>Restore Cloud</button>
+          <button type="button" class="inline-action" data-export-data>Export Data</button>
+          <button type="button" class="inline-action danger" data-delete-app-data ${state.cloudBusy ? "disabled" : ""}>Delete App Data</button>
           <button type="button" class="inline-action danger" data-cloud-signout ${state.cloudBusy ? "disabled" : ""}>Sign Out</button>
         </div>
       ` : `
@@ -3091,10 +3617,14 @@ function renderCloudPanel() {
             <button type="button" class="inline-action" data-cloud-signup ${state.cloudBusy || !state.cloudReady ? "disabled" : ""}>Create Account</button>
           </div>
         </div>
+        <div class="cloud-actions">
+          <button type="button" class="inline-action" data-export-data>Export Local</button>
+          <button type="button" class="inline-action danger" data-clear-local>Clear Local</button>
+        </div>
       `}
       <div class="background-status-row cloud-status-row">
         <span>${state.cloudBusy ? "Syncing" : signedIn ? "Synced Save" : "Device Save"}</span>
-        <small>${escapeHtml(status)} · ${escapeHtml(lastSync)}</small>
+        <small>${escapeHtml(status)} · ${escapeHtml(lastSync)} · ${escapeHtml(state.userSettings.lastSyncedAt ? `Settings ${state.userSettings.lastSyncedAt}` : "Settings local")}</small>
       </div>
     </article>
   `;
@@ -3209,6 +3739,88 @@ function metricCard(label, value, note) {
       <strong>${escapeHtml(value)}</strong>
       <small>${escapeHtml(note)}</small>
     </div>
+  `;
+}
+
+function renderProgressHistory() {
+  const logs = state.trainingLogs || [];
+  const recent = logs.slice(-28);
+  const bossLogs = logs.filter((log) => log.logType === "quest_completion" && /boss/i.test(log.title)).slice(-4);
+  return `
+    <section class="system-panel history-panel" style="--accent:#05a9c8">
+      <div class="section-top compact">
+        <div>
+          <div class="section-label">Progress History</div>
+          <p>XP over time, streak heat, stat snapshot, and boss-test PR notes from logged work.</p>
+        </div>
+        <span class="count">${logs.length} logs</span>
+      </div>
+      <div class="history-grid">
+        ${renderXpSparkline(recent)}
+        ${renderStreakHeatmap(logs)}
+        ${renderStatSnapshotChart()}
+        ${renderBossPrCards(bossLogs)}
+      </div>
+    </section>
+  `;
+}
+
+function renderXpSparkline(logs) {
+  const points = logs.length ? logs : [{ totalXp: state.totalXp || 0 }];
+  const max = Math.max(1, ...points.map((log) => Number(log.totalXp) || 0), state.totalXp || 0);
+  const bars = points.slice(-14).map((log) => {
+    const value = Number(log.totalXp) || 0;
+    const height = clamp(Math.round((value / max) * 100), 6, 100);
+    return `<span style="--value:${height}%" title="${value.toLocaleString()} XP"></span>`;
+  }).join("");
+  return `
+    <article class="chart-card">
+      <div class="section-label">XP Over Time</div>
+      <div class="bar-chart">${bars || "<em>No logs yet</em>"}</div>
+      <p>${state.totalXp.toLocaleString()} total XP</p>
+    </article>
+  `;
+}
+
+function renderStreakHeatmap(logs) {
+  const days = Array.from({ length: 21 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (20 - index));
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const count = logs.filter((log) => log.date === key).length;
+    return `<span class="${count ? "active" : ""}" title="${key}: ${count} logs"></span>`;
+  }).join("");
+  return `
+    <article class="chart-card">
+      <div class="section-label">Streak Heat</div>
+      <div class="heatmap">${days}</div>
+      <p>${state.streak} daily clears</p>
+    </article>
+  `;
+}
+
+function renderStatSnapshotChart() {
+  const rows = SYSTEM_STATS.map(([key, label, , color]) => {
+    const value = clamp(Number(state.stats[key]) || 5, 0, 100);
+    return `
+      <div class="mini-stat-row" style="--accent:${color};--value:${value}%">
+        <span>${escapeHtml(label)}</span>
+        <div class="progress"><span></span></div>
+        <b>${value}</b>
+      </div>
+    `;
+  }).join("");
+  return `<article class="chart-card"><div class="section-label">Stat Growth</div>${rows}</article>`;
+}
+
+function renderBossPrCards(logs) {
+  return `
+    <article class="chart-card">
+      <div class="section-label">Boss-Test PRs</div>
+      <div class="boss-pr-list">
+        ${logs.length ? logs.map((log) => `<span><b>${escapeHtml(log.title)}</b><small>${escapeHtml(log.date || "")}</small></span>`).join("") : "<p>No boss tests logged yet.</p>"}
+      </div>
+    </article>
   `;
 }
 
@@ -3341,6 +3953,7 @@ function renderFighterDetail(fighter) {
 }
 
 function renderVault() {
+  const visible = filteredVault();
   return `
     <section class="page vault-page">
       <div class="page-head-row">
@@ -3349,13 +3962,35 @@ function renderVault() {
           <h1 class="page-title">Visual Vault</h1>
           <p class="page-subtitle">캐릭터 · 모드 · 경지 · PATH REFERENCES</p>
         </div>
-        <div class="roster-count"><strong>${vault.length}</strong><span>refs</span></div>
+        <div class="roster-count"><strong>${visible.length}</strong><span>refs</span></div>
       </div>
+      <nav class="vault-filters" aria-label="Vault filters">
+        ${VAULT_FILTERS.map(([id, label]) => `
+          <button type="button" class="${state.vaultFilter === id ? "active" : ""}" data-vault-filter="${id}">${escapeHtml(label)}</button>
+        `).join("")}
+      </nav>
       <div class="vault-grid">
-        ${vault.map(renderVaultCard).join("")}
+        ${visible.map(renderVaultCard).join("")}
       </div>
     </section>
   `;
+}
+
+function vaultCategory(item) {
+  const [title, type] = item;
+  const haystack = `${title} ${type}`.toLowerCase();
+  if (haystack.includes("ui") || haystack.includes("unconscious") || haystack.includes("mode")) return "ui";
+  if (haystack.includes("mastery")) return "mastery";
+  if (haystack.includes("path")) return "path";
+  if (haystack.includes("gun") || haystack.includes("eli")) return "brutal";
+  if (haystack.includes("james") || haystack.includes("tom")) return "kings";
+  if (haystack.includes("tom")) return "pre-gen";
+  return "all";
+}
+
+function filteredVault() {
+  if (state.vaultFilter === "all") return vault;
+  return vault.filter((item) => vaultCategory(item) === state.vaultFilter || (state.vaultFilter === "pre-gen" && /tom/i.test(item[0])));
 }
 
 function renderVaultCard(item) {
@@ -3559,6 +4194,7 @@ function renderTrain() {
                 <span class="ko-small">${escapeHtml(mastery.ko)}</span>
                 <p>${escapeHtml(mastery.desc)}</p>
                 <span class="tiny">3 protocols · 6 levels · ${escapeHtml(mastery.users)}</span>
+                ${renderProgramBadge("mastery", mastery.id, mastery.label)}
               </span>
             </button>
           `).join("")}
@@ -3618,8 +4254,9 @@ function renderLearningLibrary() {
 }
 
 function renderFighterTypeTraining(type) {
+  const id = fighterTypeId(type);
   return `
-    <article class="fighter-type-card" data-open-fighter-type="${fighterTypeId(type)}" role="button" tabindex="0" style="--accent:${type.color}">
+    <article class="fighter-type-card" data-open-fighter-type="${id}" role="button" tabindex="0" style="--accent:${type.color}">
       <div class="fighter-type-head">
         <span>
           <span class="tiny">${escapeHtml(type.users)}</span>
@@ -3628,6 +4265,7 @@ function renderFighterTypeTraining(type) {
         </span>
         <span class="mastery-orb" aria-hidden="true"></span>
       </div>
+      ${renderProgramBadge("fighter", id, type.type)}
       <p>${escapeHtml(type.base)}</p>
       <div class="progression-grid">
         ${["beginner", "intermediate", "advanced", "mastery"].map((level) => `
@@ -3643,8 +4281,9 @@ function renderFighterTypeTraining(type) {
 }
 
 function renderMartialArt(art) {
+  const id = artId(art);
   return `
-    <article class="martial-card" data-open-art="${artId(art)}" role="button" tabindex="0" style="--accent:${art.color}">
+    <article class="martial-card" data-open-art="${id}" role="button" tabindex="0" style="--accent:${art.color}">
       <div class="martial-head">
         <span>
           <span class="tiny">${escapeHtml(art.path)}</span>
@@ -3653,6 +4292,7 @@ function renderMartialArt(art) {
         </span>
         <span class="mastery-orb" aria-hidden="true"></span>
       </div>
+      ${renderProgramBadge("art", id, art.art)}
       <p>${escapeHtml(art.note)}</p>
       <div class="progression-grid">
         ${["beginner", "intermediate", "advanced", "mastery"].map((level) => `
@@ -3672,6 +4312,7 @@ function renderMartialArt(art) {
 
 function renderMartialArtDetail(art) {
   const program = techniqueProgramFor(art);
+  const id = artId(art);
   return `
     <section class="page martial-detail-page" style="--accent:${art.color}">
       <button type="button" class="back-btn" data-back-train>← Training</button>
@@ -3681,6 +4322,7 @@ function renderMartialArtDetail(art) {
           <h1>${escapeHtml(art.art)}</h1>
           <span class="ko-small">${escapeHtml(art.ko)} · ${escapeHtml(art.users)}</span>
           <p>${escapeHtml(art.note)}</p>
+          ${renderProgramBadge("art", id, art.art)}
         </div>
         <div class="technique-xp-card">
           <span>Technique XP</span>
@@ -3722,6 +4364,9 @@ function renderMartialArtDetail(art) {
 }
 
 function renderTechniqueLevel(art, program, level) {
+  const id = artId(art);
+  const progress = programProgress("art", id);
+  const complete = progress.completedLevelIds.includes(level.id);
   const levelText = {
     "very-beginner": art.beginner,
     beginner: art.beginner,
@@ -3737,7 +4382,7 @@ function renderTechniqueLevel(art, program, level) {
       <div class="technique-stage-head">
         <span>${escapeHtml(level.weeks)}</span>
         <strong>${escapeHtml(level.label)}</strong>
-        <em>+${level.xp} XP</em>
+        <em>${complete ? "Cleared" : `+${level.xp} XP`}</em>
       </div>
       <div class="technique-stage-body">
         <section>
@@ -3758,12 +4403,14 @@ function renderTechniqueLevel(art, program, level) {
         </section>
       </div>
       ${renderResourceChips(art.art, level.label, art.sources)}
+      ${renderProgramCompleteAction("art", id, level, art.art, art.color, "technique", complete)}
     </article>
   `;
 }
 
 function renderMasteryDetail(mastery) {
   const program = MASTERY_PROGRAMS[mastery.id];
+  const progress = programProgress("mastery", mastery.id);
   return `
     <section class="page" style="--accent:${mastery.color}">
       <button type="button" class="back-btn" data-back-train>← Training</button>
@@ -3772,6 +4419,7 @@ function renderMasteryDetail(mastery) {
         <h1>${escapeHtml(mastery.label)}</h1>
         <span class="ko-small">${escapeHtml(mastery.ko)}</span>
         <p class="page-subtitle">${escapeHtml(mastery.users)}</p>
+        ${renderProgramBadge("mastery", mastery.id, mastery.label)}
       </header>
       <article class="system-panel quote-card">
         <div class="section-label">Master's Quote</div>
@@ -3798,7 +4446,7 @@ function renderMasteryDetail(mastery) {
       </div>
       <div class="section-top"><div class="section-label">Very Beginner → Mastery Level</div><span class="count">XP + resources every level</span></div>
       <div class="technique-timeline">
-        ${TECHNIQUE_LEVELS.map((level) => renderFamilyProgramLevel(mastery.label, mastery.color, program, level, program.sourceLinks)).join("")}
+        ${TECHNIQUE_LEVELS.map((level) => renderFamilyProgramLevel("mastery", mastery.id, mastery.label, mastery.color, program, level, program.sourceLinks, MASTERY_META[mastery.id] ? mastery.id === "strength" ? "power" : mastery.id : "technique", progress.completedLevelIds.includes(level.id))).join("")}
       </div>
       <div class="section-top"><div class="section-label">Training Protocols</div></div>
       <div class="protocol-list">
@@ -3815,6 +4463,8 @@ function renderMasteryDetail(mastery) {
 
 function renderFighterTypeDetail(type) {
   const program = FIGHTER_TYPE_PROGRAMS[fighterTypeId(type)];
+  const id = fighterTypeId(type);
+  const progress = programProgress("fighter", id);
   return `
     <section class="page fighter-type-detail-page" style="--accent:${type.color}">
       <button type="button" class="back-btn" data-back-train>← Training</button>
@@ -3824,6 +4474,7 @@ function renderFighterTypeDetail(type) {
           <h1>${escapeHtml(type.type)}</h1>
           <span class="ko-small">${escapeHtml(type.ko)}</span>
           <p>${escapeHtml(type.base)}</p>
+          ${renderProgramBadge("fighter", id, type.type)}
         </div>
         <div class="technique-xp-card">
           <span>Route XP</span>
@@ -3847,7 +4498,7 @@ function renderFighterTypeDetail(type) {
       </div>
       <div class="section-top"><div class="section-label">Very Beginner → Mastery Level</div><span class="count">schedule · unlock tests · resources</span></div>
       <div class="technique-timeline">
-        ${TECHNIQUE_LEVELS.map((level) => renderFamilyProgramLevel(type.type, type.color, program, level, program.sourceLinks)).join("")}
+        ${TECHNIQUE_LEVELS.map((level) => renderFamilyProgramLevel("fighter", id, type.type, type.color, program, level, program.sourceLinks, "sense", progress.completedLevelIds.includes(level.id))).join("")}
       </div>
       <article class="system-panel penalty-card" style="--accent:#f0a42f">
         <div class="section-label">Safety Note</div>
@@ -3858,7 +4509,7 @@ function renderFighterTypeDetail(type) {
   `;
 }
 
-function renderFamilyProgramLevel(context, color, program, level, sources) {
+function renderFamilyProgramLevel(type, id, context, color, program, level, sources, stat = "technique", complete = false) {
   const index = TECHNIQUE_LEVELS.findIndex((item) => item.id === level.id);
   const focus = program.core[index] || program.core[program.core.length - 1];
   const precision = program.precision[index % program.precision.length];
@@ -3868,7 +4519,7 @@ function renderFamilyProgramLevel(context, color, program, level, sources) {
       <div class="technique-stage-head">
         <span>${escapeHtml(level.weeks)}</span>
         <strong>${escapeHtml(level.label)}</strong>
-        <em>+${level.xp} XP</em>
+        <em>${complete ? "Cleared" : `+${level.xp} XP`}</em>
       </div>
       <div class="technique-stage-body">
         <section>
@@ -3893,7 +4544,19 @@ function renderFamilyProgramLevel(context, color, program, level, sources) {
         </section>
       </div>
       ${renderResourceChips(context, level.label, sources)}
+      ${renderProgramCompleteAction(type, id, level, context, color, stat, complete)}
     </article>
+  `;
+}
+
+function renderProgramCompleteAction(type, id, level, title, color, stat, complete) {
+  return `
+    <div class="program-action-row" style="--accent:${color}">
+      <span>${complete ? "Level stored in your System history." : "Clear this level after completing the weekly schedule and unlock test."}</span>
+      <button type="button" class="inline-action" data-complete-program-level="${escapeHtml(type)}" data-program-id="${escapeHtml(id)}" data-level-id="${escapeHtml(level.id)}" data-program-title="${escapeHtml(title)}" data-program-color="${escapeHtml(color)}" data-program-stat="${escapeHtml(stat)}" ${complete ? "disabled" : ""}>
+        ${complete ? "Cleared" : `Complete +${level.xp} XP`}
+      </button>
+    </div>
   `;
 }
 
@@ -3982,6 +4645,7 @@ function renderProfile() {
       <div class="diagnosis-layout">
         <section class="system-panel diagnosis-form" style="--accent:${analysis?.color || rank.color}">
           <div class="section-label">Input Window</div>
+          ${renderProfileValidation()}
           ${renderProfileFieldGroup("Body Details", "body")}
           ${renderProfileFieldGroup("Training Context", "context")}
           ${renderProfileFieldGroup("Strength PRs", "prs")}
@@ -4012,11 +4676,11 @@ function renderProfile() {
           <div class="section-top compact">
             <div>
               <div class="section-label">AI Coach Output</div>
-              <p>Readable summary from the one-shot coach. Use the floating System AI beacon for a full conversation.</p>
+              <p>Structured one-shot coach summary. Use the floating System AI beacon for a full conversation.</p>
             </div>
             <button type="button" class="inline-action" data-chat-toggle>Open System AI</button>
           </div>
-          <div class="ai-output-text">${formatAiText(state.aiCoachResult)}</div>
+          ${renderCoachCards(state.aiCoachResult)}
         </article>
       ` : ""}
     </section>
@@ -4035,6 +4699,7 @@ function renderProfileFieldGroup(title, group) {
 
 function renderProfileField(field) {
   const value = state.profile[field.key] ?? "";
+  const invalid = (state.profileValidation.errors || []).some((issue) => issue.startsWith(field.label));
   if (field.type === "select") {
     return `
       <label class="field">
@@ -4046,10 +4711,23 @@ function renderProfileField(field) {
     `;
   }
   return `
-    <label class="field">
+    <label class="field ${invalid ? "invalid" : ""}">
       <span>${escapeHtml(field.label)}</span>
-      <input data-profile="${field.key}" value="${escapeHtml(value)}" placeholder="${escapeHtml(field.placeholder || "—")}" inputmode="${field.type === "number" ? "decimal" : "text"}" />
+      <input data-profile="${field.key}" value="${escapeHtml(value)}" placeholder="${escapeHtml(field.placeholder || "—")}" inputmode="${field.type === "number" ? "decimal" : "text"}" ${field.type === "number" ? `data-numeric-field="${field.key}"` : ""} />
     </label>
+  `;
+}
+
+function renderProfileValidation() {
+  const { errors = [], warnings = [] } = state.profileValidation || {};
+  if (!errors.length && !warnings.length) {
+    return `<p class="input-hint">Numbers are validated before scoring, so impossible values will not silently distort your diagnosis.</p>`;
+  }
+  return `
+    <div class="validation-panel ${errors.length ? "has-errors" : ""}">
+      ${errors.map((issue) => `<p>${escapeHtml(issue)}</p>`).join("")}
+      ${warnings.map((issue) => `<p class="warning">${escapeHtml(issue)}</p>`).join("")}
+    </div>
   `;
 }
 
@@ -4066,9 +4744,9 @@ function renderDiagnosisEmpty() {
 function renderDiagnosisResult(analysis) {
   return `
     <article class="system-panel diagnosis-card" style="--accent:${analysis.color}">
-      <div class="section-label">Current Category</div>
+      <div class="section-label">Current Category · Diagnosis Score <span class="help-tip" title="Diagnosis Score is calculated from your profile inputs. It is not the same as dashboard System Stats, which grow from quests.">?</span></div>
       <h2>${escapeHtml(analysis.currentCategory)}</h2>
-      <span class="ko-small">${escapeHtml(analysis.ko)} · Score ${analysis.overall}/100</span>
+      <span class="ko-small">${escapeHtml(analysis.ko)} · Diagnosis Score ${analysis.overall}/100</span>
       <p>${escapeHtml(analysis.summary)}</p>
       <div class="score-grid">
         ${Object.entries(analysis.scores).map(([key, value]) => `
@@ -4224,8 +4902,49 @@ function formatAiText(value) {
     .join("");
 }
 
+function renderCoachCards(text, cards = []) {
+  const normalized = normalizeCoachCards(cards).length ? normalizeCoachCards(cards) : coachCardsFromText(text);
+  if (!normalized.length) return `<div class="ai-output-text">${formatAiText(text)}</div>`;
+  return `
+    <div class="coach-card-grid">
+      ${normalized.map((card) => `
+        <article class="coach-card">
+          <span>${escapeHtml(card.title)}</span>
+          <p>${escapeHtml(card.body)}</p>
+          ${card.action ? `<button type="button" data-chat-action="${escapeHtml(card.action)}">${escapeHtml(labelize(card.action))}</button>` : ""}
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
 function numericProfile(key) {
   return Number(state.profile[key]) || 0;
+}
+
+function validateProfileInput() {
+  const errors = [];
+  const warnings = [];
+  for (const field of PROFILE_FIELDS) {
+    if (field.type !== "number") continue;
+    const raw = String(state.profile[field.key] ?? "").trim();
+    if (!raw) {
+      if (PROFILE_REQUIRED_FOR_DIAGNOSIS.includes(field.key)) warnings.push(`${field.label} is missing, so category accuracy drops.`);
+      continue;
+    }
+    const value = Number(raw);
+    const limits = PROFILE_NUMERIC_LIMITS[field.key];
+    if (!Number.isFinite(value)) {
+      errors.push(`${field.label} must be a number.`);
+      continue;
+    }
+    if (limits && (value < limits[0] || value > limits[1])) {
+      errors.push(`${field.label} must stay between ${limits[0]} and ${limits[1]}.`);
+    }
+  }
+  const injuryText = String(state.profile.injuries || "");
+  if (injuryText.length > 160) warnings.push("Injury / Limits is long. Keep it short so the coach reads it clearly.");
+  return { errors, warnings };
 }
 
 function scoreFromRange(value, low, high) {
@@ -4239,6 +4958,13 @@ function inverseScore(value, slow, fast) {
 }
 
 function analyzeProfile() {
+  const validation = validateProfileInput();
+  state.profileValidation = validation;
+  if (validation.errors.length) {
+    state.profileResult = "Fix highlighted profile values before diagnosis.";
+    saveProfileState();
+    return null;
+  }
   const p = state.profile;
   const heightM = numericProfile("height") / 100;
   const weight = numericProfile("weight");
@@ -4288,6 +5014,7 @@ function analyzeProfile() {
   saveProfileState();
   recordDiagnosisReport();
   queueCloudSync();
+  return state.profileAnalysis;
 }
 
 function buildBlockers(input) {
@@ -4413,6 +5140,14 @@ function applyProfileJourney() {
 
 function offlineCoachSummary() {
   const analysis = state.profileAnalysis || analyzeProfile();
+  if (!analysis) {
+    return [
+      "Condition: Profile values need cleanup before diagnosis.",
+      "Training focus: fix the highlighted inputs, then rerun Analyze Offline.",
+      "Recovery and diet: keep today's work easy, repeatable, and pain-free.",
+      "Next rank: the System will assign your route after valid profile data."
+    ].join("\n\n");
+  }
   const journey = analysis.journey || buildJourney(USER_CATEGORIES[0], analysis.scores || {}, analysis.blockers || [], {
     days: numericProfile("daysPerWeek") || 4,
     session: numericProfile("sessionLength") || 45,
@@ -4441,7 +5176,7 @@ function normalizeAiCoachText(text) {
 
 async function runAiCoach() {
   if (!state.profileAnalysis) analyzeProfile();
-  const prompt = `You are a safe fitness coach for a Lookism-inspired training app. Summarize a practical weekly plan from this diagnosis. Do not claim fictional powers are real. Return 4 clear labeled bullets: Condition, Training Focus, Recovery/Diet, Next Rank. Do not return only a title. Keep it under 140 words.\n${JSON.stringify({ profile: state.profile, analysis: state.profileAnalysis })}`;
+  const prompt = `You are a safe fitness coach for a Lookism-inspired training app. Summarize a practical weekly plan from this diagnosis. Do not claim fictional powers are real. Return 4 clear labeled bullets: Condition, Today's Quest, Recovery, Next Rank. Do not return only a title. Keep it under 140 words.\n${JSON.stringify({ profile: state.profile, analysis: state.profileAnalysis })}`;
   state.aiCoachStatus = "Contacting optional AI coach...";
   state.aiCoachResult = "";
     render();
@@ -4492,12 +5227,14 @@ const assistantDrag = {
 };
 
 function clampAssistantPosition(x, y, rect) {
-  const margin = 12;
+  const margin = window.innerWidth <= 720 ? 16 : 12;
+  const minY = window.innerWidth <= 720 ? 74 : 82;
+  const bottomSafe = window.innerWidth <= 720 ? 104 : 18;
   const width = rect?.width || (window.innerWidth <= 720 ? 62 : 188);
   const height = rect?.height || (window.innerWidth <= 720 ? 62 : 68);
   return {
     x: clamp(Math.round(x), margin, Math.max(margin, window.innerWidth - width - margin)),
-    y: clamp(Math.round(y), margin, Math.max(margin, window.innerHeight - height - margin))
+    y: clamp(Math.round(y), minY, Math.max(minY, window.innerHeight - height - bottomSafe))
   };
 }
 
@@ -4580,6 +5317,32 @@ app.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target.closest("[data-toggle-focus]")) {
+    state.userSettings.focusMode = !state.userSettings.focusMode;
+    saveUserSettings();
+    syncUserSettings().catch(() => {});
+    render();
+    return;
+  }
+
+  if (event.target.closest("[data-start-diagnosis]")) {
+    state.userSettings.onboardingComplete = true;
+    saveUserSettings();
+    syncUserSettings().catch(() => {});
+    state.view = "profile";
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  if (event.target.closest("[data-complete-onboarding]")) {
+    state.userSettings.onboardingComplete = true;
+    saveUserSettings();
+    syncUserSettings().catch(() => {});
+    render();
+    return;
+  }
+
   if (event.target.closest("[data-cloud-signin]")) {
     cloudAuth("signin");
     return;
@@ -4603,9 +5366,49 @@ app.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target.closest("[data-cloud-restore]")) {
+    loadCloudState();
+    return;
+  }
+
+  if (event.target.closest("[data-export-data]")) {
+    exportAppData();
+    return;
+  }
+
+  if (event.target.closest("[data-clear-local]")) {
+    if (window.confirm("Clear local Lookism System progress on this browser?")) {
+      resetLocalAppData();
+      state.cloudStatus = "Local device save cleared.";
+      render();
+    }
+    return;
+  }
+
+  if (event.target.closest("[data-delete-app-data]")) {
+    if (window.confirm("Delete Lookism app data for this account and clear local progress?")) {
+      deleteCloudAppData();
+    }
+    return;
+  }
+
   const questButton = event.target.closest("[data-complete-quest]");
   if (questButton) {
     completeQuest(questButton.dataset.completeQuest);
+    render();
+    return;
+  }
+
+  const programButton = event.target.closest("[data-complete-program-level]");
+  if (programButton) {
+    completeProgramLevel(
+      programButton.dataset.completeProgramLevel,
+      programButton.dataset.programId,
+      programButton.dataset.levelId,
+      programButton.dataset.programTitle,
+      programButton.dataset.programColor || "#2368ff",
+      programButton.dataset.programStat || "technique"
+    );
     render();
     return;
   }
@@ -4642,6 +5445,16 @@ app.addEventListener("click", (event) => {
     state.selectedMastery = "";
     state.selectedArtId = "";
     state.selectedFighterTypeId = "";
+    render();
+    return;
+  }
+
+  const vaultFilter = event.target.closest("[data-vault-filter]");
+  if (vaultFilter) {
+    state.vaultFilter = vaultFilter.dataset.vaultFilter;
+    state.userSettings.vaultFilter = state.vaultFilter;
+    saveUserSettings();
+    syncUserSettings().catch(() => {});
     render();
     return;
   }

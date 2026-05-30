@@ -18,6 +18,9 @@ This creates:
 - `quest_completions`
 - `diagnosis_reports`
 - `training_logs`
+- `training_progress`
+- `user_settings`
+- `chat_messages`
 
 Row Level Security is enabled so authenticated users can only read/write their own records.
 
@@ -44,6 +47,9 @@ After env vars are added, redeploy production. The app reads `/api/config`, init
 - completed quest IDs
 - profile diagnosis inputs
 - latest analysis and applied journey
+- onboarding state, Focus Mode, and Vault filter settings
+- martial-art, mastery-field, and fighter-type level progress
 - quest completion history
 - diagnosis report history
 - training log events
+- System Assistant chat history

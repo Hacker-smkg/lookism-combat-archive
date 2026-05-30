@@ -56,7 +56,7 @@ function safeChatPrompt(payload) {
     "You can help with: condition summary, Lookism-style training route, martial-art focus, mastery/fighter-type guidance, diet basics, sleep, recovery, potential growth, motivation, and next-rank checklist.",
     "Important: do not directly promote the user. Rank changes are deterministic through XP, quests, boss tests, and app rules. If promotion is asked, explain the promotionReview data.",
     "Safety: fictional UI/path/mastery labels are motivation only. Do not claim powers are real. No harmful punishment, crash dieting, medical diagnosis, or full-contact fight advice. Injuries or pain require qualified professional guidance.",
-    "Return JSON only with this shape: {\"text\":\"brief assistant reply under 180 words\",\"suggestions\":[\"promotion_review\",\"quest_focus\"]}. Use only allowed suggestions.",
+    "Return JSON only with this shape: {\"text\":\"brief assistant reply under 180 words\",\"cards\":[{\"title\":\"Condition\",\"body\":\"...\"},{\"title\":\"Today's Quest\",\"body\":\"...\"},{\"title\":\"Recovery\",\"body\":\"...\"},{\"title\":\"Next Rank\",\"body\":\"...\"}],\"suggestions\":[\"promotion_review\",\"quest_focus\"]}. Use only allowed suggestions.",
     `Allowed suggestions: ${[...ALLOWED_SUGGESTIONS].join(", ")}`,
     `Context: ${JSON.stringify(context).slice(0, 9000)}`,
     `Conversation: ${JSON.stringify(sanitizeMessages(payload.messages)).slice(0, 2600)}`
@@ -69,10 +69,17 @@ function parseCoachResponse(rawText) {
   try {
     const parsed = JSON.parse(jsonCandidate);
     const text = String(parsed.text || "").trim() || raw;
+    const cards = Array.isArray(parsed.cards)
+      ? parsed.cards.map((card) => ({
+        title: String(card?.title || "").slice(0, 48),
+        body: String(card?.body || card?.text || "").slice(0, 520),
+        action: String(card?.action || "").slice(0, 40)
+      })).filter((card) => card.title && card.body).slice(0, 4)
+      : [];
     const suggestions = Array.isArray(parsed.suggestions)
       ? parsed.suggestions.filter((item) => ALLOWED_SUGGESTIONS.has(item)).slice(0, 3)
       : [];
-    return { text, suggestions };
+    return { text, cards, suggestions };
   } catch {
     const cleaned = raw
       .replace(/```json/gi, "")
@@ -85,6 +92,7 @@ function parseCoachResponse(rawText) {
       .trim();
     return {
       text: partialText || cleaned || "I read your System, but the model returned no coaching text.",
+      cards: [],
       suggestions: ["quest_focus", "promotion_review"]
     };
   }
