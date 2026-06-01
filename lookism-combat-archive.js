@@ -2843,6 +2843,41 @@ function completedDailyCount() {
   return questGroup("daily").filter((quest) => isQuestComplete(quest.id)).length;
 }
 
+function removeLatestTrainingLog(match) {
+  const logs = [...(state.trainingLogs || [])];
+  for (let index = logs.length - 1; index >= 0; index -= 1) {
+    if (match(logs[index])) {
+      logs.splice(index, 1);
+      state.trainingLogs = logs;
+      saveTrainingLogs();
+      return;
+    }
+  }
+}
+
+async function removeQuestCompletion(quest) {
+  if (!hasCloudUser() || !quest) return;
+  try {
+    const result = await state.cloudClient
+      .from("quest_completions")
+      .delete()
+      .eq("user_id", state.cloudUser.id)
+      .eq("quest_id", quest.id);
+    if (result.error) throw result.error;
+  } catch (error) {
+    state.cloudStatus = `Quest undo sync failed: ${error.message}`;
+    render();
+  }
+}
+
+function removeQuestTrainingLog(quest) {
+  removeLatestTrainingLog((log) => (
+    log.logType === "quest_completion"
+    && log.date === todayKey()
+    && log.detail?.quest?.id === quest.id
+  ));
+}
+
 function completeQuest(id) {
   const quest = activeQuestCatalog().find((item) => item.id === id);
   if (!quest || isQuestComplete(id)) return;
@@ -2861,6 +2896,35 @@ function completeQuest(id) {
   recordQuestCompletion(quest);
   recordTrainingLog("quest_completion", quest.title, { quest });
   queueCloudSync();
+}
+
+function undoQuest(id) {
+  const quest = activeQuestCatalog().find((item) => item.id === id);
+  if (!quest || !isQuestComplete(id)) return;
+  const dailyWasComplete = quest.type === "daily" && completedDailyCount() === questGroup("daily").length;
+  state.completedQuestIds = state.completedQuestIds.filter((questId) => questId !== id);
+  state.totalXp = Math.max(0, (Number(state.totalXp) || 0) - quest.xp);
+  state.level = levelFromXp(state.totalXp);
+  state.stats[quest.stat] = clamp((Number(state.stats[quest.stat]) || 5) - quest.statGain, 1, 100);
+  if (quest.type === "daily") {
+    const dailyDone = completedDailyCount();
+    const dailyTotal = questGroup("daily").length;
+    if (dailyWasComplete && dailyDone < dailyTotal && state.streakAwardedDate === todayKey()) {
+      state.streak = Math.max(0, (Number(state.streak) || 0) - 1);
+      state.streakAwardedDate = "";
+    }
+    state.penaltyDebt = dailyDone > 0 && dailyDone < dailyTotal;
+  }
+  state.lastActiveDate = todayKey();
+  removeQuestTrainingLog(quest);
+  saveProgress();
+  removeQuestCompletion(quest);
+  queueCloudSync();
+}
+
+function toggleQuest(id) {
+  if (isQuestComplete(id)) undoQuest(id);
+  else completeQuest(id);
 }
 
 function resetDailyQuests() {
@@ -3053,6 +3117,47 @@ function completeProgramLevel(type, id, levelId, title, color, stat = "technique
     render();
   });
   queueCloudSync();
+}
+
+function undoProgramLevel(type, id, levelId, title, color, stat = "technique") {
+  const level = TECHNIQUE_LEVELS.find((item) => item.id === levelId);
+  if (!level) return;
+  const key = programStorageKey(type, id);
+  const current = programProgress(type, id);
+  if (!current.completedLevelIds.includes(levelId)) return;
+  const xp = level.xp;
+  const statGain = Math.max(1, Math.round(xp / 180));
+  state.trainingProgress[key] = {
+    ...current,
+    xp: Math.max(0, (Number(current.xp) || 0) - xp),
+    completedLevelIds: current.completedLevelIds.filter((idValue) => idValue !== levelId),
+    lastTrainedAt: new Date().toISOString()
+  };
+  state.totalXp = Math.max(0, (Number(state.totalXp) || 0) - xp);
+  state.level = levelFromXp(state.totalXp);
+  state.stats[stat] = clamp((Number(state.stats[stat]) || 5) - statGain, 1, 100);
+  removeLatestTrainingLog((log) => (
+    log.logType === "program_level"
+    && log.detail?.programType === type
+    && log.detail?.programId === id
+    && log.detail?.levelId === levelId
+  ));
+  saveTrainingProgress();
+  saveProgress();
+  syncTrainingProgress(key).catch((error) => {
+    state.cloudStatus = `Training progress undo sync failed: ${error.message}`;
+    render();
+  });
+  queueCloudSync();
+}
+
+function toggleProgramLevel(type, id, levelId, title, color, stat = "technique") {
+  const current = programProgress(type, id);
+  if (current.completedLevelIds.includes(levelId)) {
+    undoProgramLevel(type, id, levelId, title, color, stat);
+    return;
+  }
+  completeProgramLevel(type, id, levelId, title, color, stat);
 }
 
 function localTrainingLog(logType, title, detail = {}) {
@@ -3400,8 +3505,8 @@ function renderBottomNav() {
 function assistantFabStyle() {
   const position = state.assistantPosition;
   if (!position) return "";
-  const width = window.innerWidth <= 720 ? 62 : 188;
-  const height = window.innerWidth <= 720 ? 62 : 68;
+  const width = window.innerWidth <= 720 ? 62 : 72;
+  const height = window.innerWidth <= 720 ? 62 : 72;
   const margin = window.innerWidth <= 720 ? 16 : 12;
   const minY = window.innerWidth <= 720 ? 74 : 82;
   const bottomSafe = window.innerWidth <= 720 ? 104 : 18;
@@ -3966,14 +4071,14 @@ function renderQuestGroup(title, desc, type, count) {
 function renderQuestCard(quest) {
   const complete = isQuestComplete(quest.id);
   return `
-    <button type="button" class="quest-row system-quest ${complete ? "completed" : ""}" data-complete-quest="${quest.id}" style="--accent:${quest.color}" ${complete ? "disabled" : ""}>
+    <button type="button" class="quest-row system-quest ${complete ? "completed" : ""}" data-toggle-quest="${quest.id}" style="--accent:${quest.color}" aria-pressed="${complete ? "true" : "false"}">
       <span class="square-mark">${complete ? "✓" : "○"}</span>
       <div>
         <span class="tiny">${escapeHtml(quest.ko)} · ${escapeHtml(labelize(quest.stat))}</span>
         <h3>${escapeHtml(quest.title)}</h3>
         <p>${escapeHtml(quest.desc)}</p>
       </div>
-      <div class="xp">+${quest.xp}<br><span class="tiny">XP</span></div>
+      <div class="xp">${complete ? `Undo<br><span class="tiny">-${quest.xp} XP</span>` : `+${quest.xp}<br><span class="tiny">XP</span>`}</div>
     </button>
   `;
 }
@@ -4855,9 +4960,9 @@ function renderFamilyProgramLevel(type, id, context, color, program, level, sour
 function renderProgramCompleteAction(type, id, level, title, color, stat, complete) {
   return `
     <div class="program-action-row" style="--accent:${color}">
-      <span>${complete ? "Level stored in your System history." : "Clear this level after completing the weekly schedule and unlock test."}</span>
-      <button type="button" class="inline-action" data-complete-program-level="${escapeHtml(type)}" data-program-id="${escapeHtml(id)}" data-level-id="${escapeHtml(level.id)}" data-program-title="${escapeHtml(title)}" data-program-color="${escapeHtml(color)}" data-program-stat="${escapeHtml(stat)}" ${complete ? "disabled" : ""}>
-        ${complete ? "Cleared" : `Complete +${level.xp} XP`}
+      <span>${complete ? "Level stored. Use undo if this was tapped by mistake." : "Clear this level after completing the weekly schedule and unlock test."}</span>
+      <button type="button" class="inline-action ${complete ? "undo-action" : ""}" data-toggle-program-level="${escapeHtml(type)}" data-program-id="${escapeHtml(id)}" data-level-id="${escapeHtml(level.id)}" data-program-title="${escapeHtml(title)}" data-program-color="${escapeHtml(color)}" data-program-stat="${escapeHtml(stat)}">
+        ${complete ? `Undo -${level.xp} XP` : `Complete +${level.xp} XP`}
       </button>
     </div>
   `;
@@ -5527,8 +5632,8 @@ function clampAssistantPosition(x, y, rect) {
   const margin = window.innerWidth <= 720 ? 16 : 12;
   const minY = window.innerWidth <= 720 ? 74 : 82;
   const bottomSafe = window.innerWidth <= 720 ? 104 : 18;
-  const width = rect?.width || (window.innerWidth <= 720 ? 62 : 188);
-  const height = rect?.height || (window.innerWidth <= 720 ? 62 : 68);
+  const width = rect?.width || (window.innerWidth <= 720 ? 62 : 72);
+  const height = rect?.height || (window.innerWidth <= 720 ? 62 : 72);
   return {
     x: clamp(Math.round(x), margin, Math.max(margin, window.innerWidth - width - margin)),
     y: clamp(Math.round(y), minY, Math.max(minY, window.innerHeight - height - bottomSafe))
@@ -5717,17 +5822,17 @@ app.addEventListener("click", (event) => {
     return;
   }
 
-  const questButton = event.target.closest("[data-complete-quest]");
+  const questButton = event.target.closest("[data-toggle-quest]");
   if (questButton) {
-    completeQuest(questButton.dataset.completeQuest);
+    toggleQuest(questButton.dataset.toggleQuest);
     render();
     return;
   }
 
-  const programButton = event.target.closest("[data-complete-program-level]");
+  const programButton = event.target.closest("[data-toggle-program-level]");
   if (programButton) {
-    completeProgramLevel(
-      programButton.dataset.completeProgramLevel,
+    toggleProgramLevel(
+      programButton.dataset.toggleProgramLevel,
       programButton.dataset.programId,
       programButton.dataset.levelId,
       programButton.dataset.programTitle,

@@ -924,6 +924,12 @@ img {
   background: rgba(255, 51, 61, 0.06);
 }
 
+.inline-action.undo-action {
+  border-color: rgba(255, 174, 66, 0.62);
+  color: #ffae42;
+  background: rgba(255, 174, 66, 0.08);
+}
+
 .inline-action:disabled {
   cursor: not-allowed;
   opacity: 0.36;
@@ -2173,15 +2179,16 @@ img {
 }
 
 .system-quest.completed {
-  opacity: 0.68;
+  cursor: pointer;
+  opacity: 0.82;
 }
 
 .system-quest.completed .square-mark {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
-.system-quest:disabled {
-  cursor: default;
+.system-quest.completed .xp {
+  color: #ffae42;
 }
 
 .penalty-card {
@@ -2813,16 +2820,19 @@ img {
 
 .assistant-fab {
   position: fixed;
-  top: 50%;
+  top: auto;
   right: 22px;
-  bottom: auto;
+  bottom: 24px;
   z-index: 210;
   display: inline-flex;
-  min-width: 188px;
-  min-height: 68px;
+  width: 72px;
+  min-width: 72px;
+  height: 72px;
+  min-height: 72px;
+  justify-content: center;
   align-items: center;
-  gap: 12px;
-  padding: 0 16px 0 10px;
+  gap: 0;
+  padding: 0;
   border: 1px solid rgba(35, 104, 255, 0.9);
   border-radius: 999px;
   color: var(--blue);
@@ -2831,7 +2841,7 @@ img {
     rgba(0, 0, 0, 0.94);
   box-shadow: 0 0 34px rgba(35, 104, 255, 0.46), inset 0 0 24px rgba(35, 104, 255, 0.16);
   cursor: grab;
-  transform: translateY(-50%);
+  transform: none;
   touch-action: none;
   user-select: none;
 }
@@ -2861,7 +2871,7 @@ img {
 }
 
 .assistant-fab-copy {
-  display: grid;
+  display: none;
   gap: 1px;
   text-align: left;
 }
