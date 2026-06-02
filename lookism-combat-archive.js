@@ -1704,6 +1704,7 @@ const state = {
   chatDraft: "",
   chatStatus: "",
   chatBusy: false,
+  mobileMenuOpen: false,
   chatLastSyncedAt: "",
   chatSyncTimer: null,
   assistantPosition: loadAssistantPosition(),
@@ -3367,6 +3368,8 @@ function icon(name) {
     path: '<path d="M12 3c5 4 5 14 0 18C7 17 7 7 12 3z"/><path d="M12 7v10"/>',
     reports: '<path d="M5 20V6"/><path d="M5 20h15"/><path d="M9 16v-5"/><path d="M13 16V8"/><path d="M17 16v-3"/>',
     profile: '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    focus: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><path d="M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>',
+    more: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     chat: '<path d="M21 12a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-3.6-.75L3 21l1.35-5.2A8.5 8.5 0 1 1 21 12z"/><path d="M8 11.5h8M8 15h5M9 8h6"/>'
   };
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.home}</svg>`;
@@ -3488,17 +3491,56 @@ function renderTopNav() {
 
 function renderBottomNav() {
   if (["auth", "awakening"].includes(state.view)) return "";
-  const items = navItems();
   const active = state.view === "fighter" ? "fighters" : state.view;
+  const primaryItems = [
+    ["home", "System"],
+    ["fighters", "Fighters"],
+    ["train", "Train"],
+    ["path", "Path"]
+  ];
+  const moreItems = [
+    ["vault", "Vault"],
+    ["reports", "Reports"],
+    ["profile", "Profile"]
+  ];
+  const moreActive = state.mobileMenuOpen || moreItems.some(([view]) => active === view);
   return `
-    <nav class="bottom-nav" aria-label="Lookism Fitness navigation">
-      ${items.map(([view, label]) => `
+    <nav class="bottom-nav" aria-label="Lookism Fitness mobile navigation">
+      ${primaryItems.map(([view, label]) => `
         <button type="button" class="${active === view ? "active" : ""}" data-view="${view}">
           ${icon(view)}
           <span>${label}</span>
         </button>
       `).join("")}
+      <button type="button" class="${moreActive ? "active" : ""}" data-mobile-more aria-expanded="${state.mobileMenuOpen ? "true" : "false"}">
+        ${icon("more")}
+        <span>More</span>
+      </button>
     </nav>
+    ${state.mobileMenuOpen ? `
+      <button type="button" class="mobile-more-scrim" data-mobile-close aria-label="Close mobile menu"></button>
+      <aside class="mobile-more-sheet" aria-label="More mobile navigation">
+        <div class="mobile-more-head">
+          <div>
+            <div class="section-label">More</div>
+            <strong>System Menu</strong>
+          </div>
+          <button type="button" class="assistant-close" data-mobile-close aria-label="Close menu">×</button>
+        </div>
+        <div class="mobile-more-grid">
+          ${moreItems.map(([view, label]) => `
+            <button type="button" class="${active === view ? "active" : ""}" data-view="${view}">
+              ${icon(view)}
+              <span>${label}</span>
+            </button>
+          `).join("")}
+          <button type="button" class="${state.userSettings.focusMode ? "active" : ""}" data-toggle-focus>
+            ${icon("focus")}
+            <span>${state.userSettings.focusMode ? "Focus On" : "Focus Mode"}</span>
+          </button>
+        </div>
+      </aside>
+    ` : ""}
   `;
 }
 
@@ -3520,7 +3562,7 @@ function renderChatAssistant() {
   const contextLine = buildConditionBrief();
   const signedIn = hasCloudUser();
   return `
-    <div class="system-assistant ${state.chatOpen ? "open" : ""}">
+    <div class="system-assistant ${state.chatOpen ? "open" : ""} ${state.mobileMenuOpen ? "mobile-menu-open" : ""}">
       <button type="button" class="assistant-fab" data-chat-toggle data-assistant-drag aria-label="${state.chatOpen ? "Close" : "Open"} System Assistant" aria-expanded="${state.chatOpen ? "true" : "false"}" style="${assistantFabStyle()}">
         <span class="assistant-fab-core">
           ${icon("chat")}
@@ -5713,6 +5755,18 @@ app.addEventListener("click", (event) => {
     return;
   }
 
+  if (event.target.closest("[data-mobile-more]")) {
+    state.mobileMenuOpen = !state.mobileMenuOpen;
+    render();
+    return;
+  }
+
+  if (event.target.closest("[data-mobile-close]")) {
+    state.mobileMenuOpen = false;
+    render();
+    return;
+  }
+
   const chatAction = event.target.closest("[data-chat-action]");
   if (chatAction) {
     runChatAction(chatAction.dataset.chatAction);
@@ -5721,6 +5775,7 @@ app.addEventListener("click", (event) => {
 
   if (event.target.closest("[data-toggle-focus]")) {
     state.userSettings.focusMode = !state.userSettings.focusMode;
+    state.mobileMenuOpen = false;
     saveUserSettings();
     syncUserSettings().catch(() => {});
     render();
@@ -5859,6 +5914,7 @@ app.addEventListener("click", (event) => {
   const viewButton = event.target.closest("[data-view]");
   if (viewButton) {
     state.view = resolveRequestedView(viewButton.dataset.view);
+    state.mobileMenuOpen = false;
     state.userSettings.lastVisitedView = state.view;
     saveUserSettings();
     if (state.view === "train") {
