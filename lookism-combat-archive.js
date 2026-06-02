@@ -514,64 +514,727 @@ const ARCHETYPES = {
   }
 };
 
-const rosterSeed = [
-  ["Gapryong Kim", "Legendary Leader of Fist Gang", "Gapryong Fist", "Top 20", "conviction-brawler", "gapryong", "strength endurance conviction path"],
-  ["UI Daniel Park", "Perfect Body", "J-High Allied", "Top 20", "ui-copy", "uiDaniel", "copy technique speed ui path"],
-  ["Shingen Yamazaki", "Head of Yamazaki Clan", "Yamazaki Clan", "Top 20", "ui-copy", "shingen", "strength technique endurance ui"],
-  ["Mujin Jin", "Equal to Gapryong", "Cheonliang", "Top 20", "grappler", "mujin", "strength technique path"],
-  ["James Lee", "The Legend of 1st Gen", "Ten Geniuses", "Top 20", "speed-legend", "james", "speed technique path"],
-  ["Kitae Kim", "King of Seoul", "Mexico / Kim bloodline", "Top 20", "king-strength", "kitae", "strength technique endurance"],
-  ["Gun Park", "Master of all martial arts", "Yamazaki / Ten Geniuses", "Top 20", "ui-copy", "gun", "technique strength endurance ui"],
-  ["Goo Kim", "Secret Friend", "Ten Geniuses", "Top 20", "weapon", "goo", "weapon speed technique"],
-  ["Tom Lee", "Fighting Genius", "White Tiger Job Centre", "Top 20", "wild-wall", "tom", "strength speed technique endurance"],
-  ["Seongji Yuk", "King of Cheonliang", "First Generation", "Top 20", "king-strength", "seongji", "strength speed technique"],
-  ["Jinyoung Park", "Fist Gang copycat", "Gapryong Fist", "Top 20", "ui-copy", "jinyoung", "copy technique speed"],
-  ["Charles Choi", "Elite / head of HNH Group", "HNH Group", "Top 20", "speed-legend", "charles", "speed technique"],
-  ["Jichang Kwak", "King of Chungcheongnam-do", "First Generation", "Top 20", "striker", "jichang", "technique strength speed"],
-  ["Sophia", "Bodyguard", "Russian security", "Top 20", "grappler", "sophia", "strength technique endurance"],
-  ["Manager Kim", "Elite Agent", "White Tiger Job Centre", "Top 20", "weapon", "managerKim", "weapon technique endurance"],
-  ["Taesoo Ma", "King of Ansan", "First Generation", "Top 20", "king-strength", "taesoo", "strength conviction"],
-  ["Yujae Seon", "King of 1st Gen", "First Generation", "Top 20", "king-strength", "yujae", "strength speed endurance"],
-  ["Bang Mandeok", "Workers powerhouse", "Workers", "Top 20", "king-strength", "mandeok", "strength endurance"],
-  ["Xiaolong", "Vivi's guard", "Workers 3A", "Top 20", "weapon", "xiaolong", "weapon speed technique"],
-  ["Samuel Seo", "Heat and inferiority", "Workers / Big Deal", "Top 20", "king-strength", "samuel", "strength endurance conviction"],
-  ["Jerry Kwon", "Sword of Jake", "Big Deal", "21-50 Powerhouse", "king-strength", "jerry", "strength endurance"],
-  ["Warren Chae", "CQC student", "Hostel", "21-50 Powerhouse", "striker", "warren", "technique speed endurance"],
-  ["Olly Wang", "Pain-null Hostel head", "Hostel", "21-50 Powerhouse", "crew", "olly", "endurance conviction"],
-  ["Vin Jin", "Cheonliang Arc", "J-High", "21-50 Powerhouse", "grappler", "vin", "strength technique endurance"],
-  ["Zack Lee", "Blue Eyes", "J-High Allied", "21-50 Powerhouse", "iron-boxing", "zack", "endurance technique strength"],
-  ["Vasco", "Runner's High", "Burn Knuckles", "21-50 Powerhouse", "conviction-brawler", "vasco", "strength endurance conviction"],
-  ["Eli Jang", "Wildness", "Hostel", "21-50 Powerhouse", "wild-wall", "eli", "technique speed path"],
-  ["Johan Seong", "Copycat", "God Dog", "21-50 Powerhouse", "ui-copy", "johan", "copy technique path"],
-  ["Jake Kim", "Awakened", "Big Deal", "21-50 Powerhouse", "conviction-brawler", "jake", "conviction strength endurance"],
-  ["Ryuhei Kuroda", "Magician", "Workers 2A", "21-50 Powerhouse", "weapon", "ryuhei", "weapon speed conviction"],
-  ["Kenta Magami", "Yamazaki grudge", "Workers 2A", "21-50 Powerhouse", "striker", "kenta", "technique conviction"],
-  ["Hudson Ahn", "Sun of Ansan", "Allied", "21-50 Powerhouse", "king-strength", "hudson", "strength conviction"],
-  ["Jay Hong", "Systema / Kali-Arnis specialist", "J-High Allied", "21-50 Powerhouse", "weapon", "jay", "weapon technique speed"],
-  ["Logan Lee", "J-High bully tank", "Workers / J-High", "21-50 Powerhouse", "crew", "logan", "strength endurance"],
-  ["Baekho Kwon", "Gapryong's Shield", "Gapryong Fist", "21-50 Powerhouse", "wild-wall", "baekho", "strength endurance"],
-  ["Hansu Seong", "Taekwondo master", "PTJ connected", "21-50 Powerhouse", "striker", "hansu", "speed technique"],
-  ["Brekdak", "Muay Thai teacher", "Burn Knuckles mentor", "21-50 Powerhouse", "striker", "brekdak", "technique strength endurance"],
-  ["Paecheon Jo", "Black Alligator / Dark Crocodile", "Pre-Generation", "21-50 Powerhouse", "wild-wall", "paecheon", "strength endurance conviction"],
-  ["Jaegyeon Na", "King of Incheon", "First Generation", "21-50 Powerhouse", "speed-legend", "jaegyeon", "speed technique path"],
-  ["Shintaro Yamazaki", "Shingen's brother", "Yamazaki Clan", "21-50 Powerhouse", "weapon", "shintaro", "weapon technique speed"],
-  ["Sinu Han", "Invisible Attacks", "Big Deal", "21-50 Powerhouse", "speed-legend", "sinu", "speed technique"],
-  ["Jaeha Kim", "Jaeha Han / PTJ crossover", "Questism", "21-50 Powerhouse", "striker", "jaeha", "speed technique conviction"],
-  ["Seokdu Wang", "King of Suwon", "First Generation", "21-50 Powerhouse", "king-strength", "seokdu", "strength endurance"],
-  ["Gongseob Ji", "King of Daegu", "First Generation", "21-50 Powerhouse", "iron-boxing", "gongseob", "endurance strength technique"],
-  ["Taejin Cheon", "Cheonliang powerhouse", "Cheonliang", "21-50 Powerhouse", "grappler", "taejin", "strength technique conviction"],
-  ["Hangyeol Baek", "First affiliate doctor", "Workers 1A", "21-50 Powerhouse", "crew", "hangyeol", "technique conviction"],
-  ["Kwak Jibeom", "Kwak family power", "Kwak family", "21-50 Powerhouse", "king-strength", "jibeom", "strength technique"],
-  ["Kwak Jichang's Brother", "Jihan Kwak", "Kwak family", "21-50 Powerhouse", "striker", "jihan", "technique speed"],
-  ["Bongae Choi", "Lightning Choi", "Pre-Generation", "21-50 Powerhouse", "speed-legend", "bongae", "speed technique endurance"],
-  ["Bakgu Noh", "Fist Gang elder", "Pre-Generation", "21-50 Powerhouse", "crew", "bakgu", "technique endurance conviction"]
+const PDF_FIGHTER_DATABASE = [
+  {
+    rank: 1,
+    name: "UI Big Daniel",
+    aliases: ["UI Daniel Park", "Perfect Body", "Second Body Daniel", "Daniel Park"],
+    faction: "J-High Allied",
+    archetypeKey: "ui-copy",
+    imageKey: "uiDaniel",
+    primaryTechniques: "All Martial Arts",
+    uniqueSkill: "Infinite Copy",
+    masteriesAchieved: "Perfect Hardware / Software",
+    combatPath: "Absolute Neutrality",
+    masteryTags: ["copy", "ui", "technique", "speed", "strength", "endurance"],
+    evolution: { vb: "Fat Daniel", b: "Basic Copy", i: "Heat Mode", a: "Systema / Gun Copy", e: "Perfect UI" }
+  },
+  {
+    rank: 2,
+    name: "Gapryong Kim",
+    aliases: ["Legendary Leader of Fist Gang", "Gapryong Fist"],
+    faction: "Gapryong Fist",
+    archetypeKey: "conviction-brawler",
+    imageKey: "gapryong",
+    primaryTechniques: "Brawling / Boxing",
+    uniqueSkill: "Hysterical Overcome",
+    masteriesAchieved: "Conviction, Strength, Speed, Endurance, Technique",
+    combatPath: "Path of Protection",
+    masteryTags: ["conviction", "strength", "speed", "endurance", "technique", "path"],
+    evolution: { vb: "Street Thug", b: "Gangster", i: "Fist Gang Boss", a: "Invisible Attack Counter", e: "Peak of Gen 0" }
+  },
+  {
+    rank: 3,
+    name: "Yamazaki Head",
+    aliases: ["Head of Yamazaki Clan", "Yamazaki Clan Head"],
+    faction: "Yamazaki Clan",
+    archetypeKey: "ui-copy",
+    imageKey: "shingen",
+    primaryTechniques: "Kyokushin / Lethal Arts",
+    uniqueSkill: "Bloodline UI",
+    masteriesAchieved: "Shinnu UI, Strength, Endurance, Technique",
+    combatPath: "Path of Conquest",
+    masteryTags: ["ui", "strength", "endurance", "technique", "path"],
+    evolution: { vb: "Clan Heir", b: "Yakuza Enforcer", i: "Syndicate Boss", a: "Great Power", e: "Ultimate Destroyer" }
+  },
+  {
+    rank: 4,
+    name: "James Lee",
+    aliases: ["James Lee (Prime)", "DG", "Diego Kang", "The Legend"],
+    faction: "First Generation / Ten Geniuses",
+    archetypeKey: "speed-legend",
+    imageKey: "james",
+    primaryTechniques: "Capoeira / Taekwondo",
+    uniqueSkill: "Invisible Attacks",
+    masteriesAchieved: "Speed, Technique, Strength",
+    combatPath: "One Man Generation",
+    masteryTags: ["speed", "technique", "strength", "path"],
+    evolution: { vb: "Genius Student", b: "First Gen Challenger", i: "Circle Breaker", a: "Peak of Gen 1", e: "The Legend" }
+  },
+  {
+    rank: 5,
+    name: "Charles Choi",
+    aliases: ["Charles Choi (Prime)", "Elite", "HNH Group"],
+    faction: "Fist Gang / HNH Group",
+    archetypeKey: "speed-legend",
+    imageKey: "charles",
+    primaryTechniques: "Taekwondo / Agility",
+    uniqueSkill: "Invisible Attacks",
+    masteriesAchieved: "Speed, Technique",
+    combatPath: "Ruthless Pragmatism",
+    masteryTags: ["speed", "technique"],
+    evolution: { vb: "Fighter", b: "Strategist", i: "Vice Boss", a: "Invisible Attack Originator", e: "Elite (Prime)" }
+  },
+  {
+    rank: 6,
+    name: "Gitae Kim",
+    aliases: ["Kitae Kim", "King of Seoul", "Gapryong's son"],
+    faction: "Mexico / Kim Bloodline",
+    archetypeKey: "king-strength",
+    imageKey: "kitae",
+    primaryTechniques: "Brutality / Weaponry",
+    uniqueSkill: "Dark Conviction",
+    masteriesAchieved: "Dark Conviction, Strength, Endurance",
+    combatPath: "Raw Brutality",
+    masteryTags: ["conviction", "strength", "endurance", "weapon"],
+    evolution: { vb: "Neglected Son", b: "Street Fighter", i: "Cartel Boss", a: "King of Seoul", e: "Apex Predator" }
+  },
+  {
+    rank: 7,
+    name: "Gun Park",
+    aliases: ["White Ghost", "Yamazaki Jonggun"],
+    faction: "Yamazaki / Ten Geniuses",
+    archetypeKey: "ui-copy",
+    imageKey: "gun",
+    primaryTechniques: "Kyokushin / Aikido",
+    uniqueSkill: "Unconscious UI",
+    masteriesAchieved: "UI, Strength, Endurance, Technique",
+    combatPath: "Yamazaki Shield",
+    masteryTags: ["ui", "strength", "endurance", "technique"],
+    evolution: { vb: "Clan Prisoner", b: "Prison Demon", i: "White Ghost", a: "Nurture Genius", e: "Shinnu UI" }
+  },
+  {
+    rank: 8,
+    name: "Goo Kim",
+    aliases: ["Secret Friend", "Weapon Genius"],
+    faction: "Ten Geniuses",
+    archetypeKey: "weapon",
+    imageKey: "goo",
+    primaryTechniques: "Weaponizing Objects",
+    uniqueSkill: "Instant Lethality",
+    masteriesAchieved: "Technique, Speed, Weapon Mastery",
+    combatPath: "The Lethal Blade",
+    masteryTags: ["weapon", "technique", "speed"],
+    evolution: { vb: "Bully", b: "Kendo Trainee", i: "Secret Friend", a: "Weapon Genius", e: "Twin Swords / Katana" }
+  },
+  {
+    rank: 9,
+    name: "Tom Lee",
+    aliases: ["Fighting Genius", "Dogyu Lee"],
+    faction: "White Tiger Job Centre",
+    archetypeKey: "wild-wall",
+    imageKey: "tom",
+    primaryTechniques: "Brawling / Wildness",
+    uniqueSkill: "Demonic Charge",
+    masteriesAchieved: "Strength, Speed, Endurance, Technique",
+    combatPath: "Demonic Miser",
+    masteryTags: ["strength", "speed", "endurance", "technique", "path"],
+    evolution: { vb: "Beggar", b: "Street Brawler", i: "Fighting Genius", a: "Wildness Master", e: "Ultimate King (Prime)" }
+  },
+  {
+    rank: 10,
+    name: "Jinyoung Park",
+    aliases: ["Fist Gang Copycat", "Copy Genius"],
+    faction: "Gapryong Fist",
+    archetypeKey: "ui-copy",
+    imageKey: "jinyoung",
+    primaryTechniques: "MMA / Copy",
+    uniqueSkill: "Copy Talent",
+    masteriesAchieved: "Technique, Speed, Copy",
+    combatPath: "Infinite Adaptation",
+    masteryTags: ["copy", "technique", "speed"],
+    evolution: { vb: "Medical Student", b: "Street Fighter", i: "Action Chief", a: "Copy Genius", e: "3-Gen Copy Master" }
+  },
+  {
+    rank: 11,
+    name: "Mujin Jin",
+    aliases: ["Legend of Ssireum", "Equal to Gapryong"],
+    faction: "Cheonliang",
+    archetypeKey: "grappler",
+    imageKey: "mujin",
+    primaryTechniques: "Ssireum / Wrestling",
+    uniqueSkill: "Iron Grip",
+    masteriesAchieved: "Strength, Endurance, Ssireum",
+    combatPath: "Endless Horizons",
+    masteryTags: ["strength", "endurance", "technique", "path"],
+    evolution: { vb: "Wrestler", b: "Wanderer", i: "Legend of Ssireum", a: "Multi-Threshold", e: "3-Threshold Master" }
+  },
+  {
+    rank: 12,
+    name: "Seongji Yuk",
+    aliases: ["King of Cheonliang", "Seongji Yook"],
+    faction: "First Generation",
+    archetypeKey: "grappler",
+    imageKey: "seongji",
+    primaryTechniques: "Kudo / Ssireum",
+    uniqueSkill: "Six Fingers",
+    masteriesAchieved: "Strength, Speed, Durability",
+    combatPath: "Cheonliang Guardian",
+    masteryTags: ["strength", "speed", "endurance", "technique"],
+    evolution: { vb: "Sacrificial Child", b: "Mujin's Disciple", i: "Kudo Trainee", a: "King of Cheonliang", e: "3-Mastery Guardian" }
+  },
+  {
+    rank: 13,
+    name: "Shingen Yamazaki",
+    aliases: ["Yamazaki Shingen", "Yamazaki top tier"],
+    faction: "Yamazaki Clan",
+    archetypeKey: "ui-copy",
+    imageKey: "shingen",
+    primaryTechniques: "Kyokushin",
+    uniqueSkill: "UI State",
+    masteriesAchieved: "UI, Strength, Endurance",
+    combatPath: "Yakuza Hardware",
+    masteryTags: ["ui", "strength", "endurance", "technique"],
+    evolution: { vb: "Enforcer", b: "Syndicate Fighter", i: "Clan Executive", a: "Top Tier Yamazaki", e: "Unyielding Demon" }
+  },
+  {
+    rank: 14,
+    name: "Manager Kim",
+    aliases: ["Kim Bujang", "SMK", "Elite Agent"],
+    faction: "White Tiger Job Centre",
+    archetypeKey: "weapon",
+    imageKey: "managerKim",
+    primaryTechniques: "CQC / Jeet Kune Do",
+    uniqueSkill: "Wire Arts",
+    masteriesAchieved: "Technique, Speed, CQC",
+    combatPath: "Hidden Dragon",
+    masteryTags: ["weapon", "technique", "speed"],
+    evolution: { vb: "Soldier", b: "Special Forces", i: "Ghost Platoon", a: "CQC Master", e: "Wire Assassin (Prime)" }
+  },
+  {
+    rank: 15,
+    name: "Samdak",
+    aliases: ["How to Fight mentor", "Mythology Counter"],
+    faction: "PTJ Connected",
+    archetypeKey: "striker",
+    imageKey: "",
+    primaryTechniques: "MMA / Counters",
+    uniqueSkill: "Mythology Counter",
+    masteriesAchieved: "Technique, Counter Mastery",
+    combatPath: "Mythological Counter",
+    masteryTags: ["technique", "endurance", "path"],
+    evolution: { vb: "Recruit", b: "Soldier", i: "Ghost Platoon Legend", a: "Travel Streamer", e: "Unbeaten Myth" }
+  },
+  {
+    rank: 16,
+    name: "Lang Jin",
+    aliases: ["Jinrang", "Iron Elbow"],
+    faction: "Busan / Conviction Route",
+    archetypeKey: "conviction-brawler",
+    imageKey: "",
+    primaryTechniques: "Muay Thai / Brawling",
+    uniqueSkill: "Iron Elbow",
+    masteriesAchieved: "Conviction / Overcome",
+    combatPath: "Iron Elbow Bypass",
+    masteryTags: ["conviction", "strength", "technique"],
+    evolution: { vb: "Trainee", b: "Fighter", i: "Gangster", a: "Mastery Breaker", e: "Conviction Striker" }
+  },
+  {
+    rank: 17,
+    name: "Changsu Oh",
+    aliases: ["Money Demon", "Mixed Weaponry"],
+    faction: "Pre-Generation",
+    archetypeKey: "weapon",
+    imageKey: "",
+    primaryTechniques: "Mixed Weaponry",
+    uniqueSkill: "Money Demon",
+    masteriesAchieved: "Strength, Endurance, Technique, Speed",
+    combatPath: "Miser Counterattack",
+    masteryTags: ["weapon", "strength", "endurance", "technique", "speed"],
+    evolution: { vb: "Thug", b: "Enforcer", i: "Weapon User", a: "Multi-Mastery", e: "4-Mastery King" }
+  },
+  {
+    rank: 18,
+    name: "Jichang Kwak",
+    aliases: ["White Snake", "King of Chungcheong"],
+    faction: "First Generation",
+    archetypeKey: "striker",
+    imageKey: "jichang",
+    primaryTechniques: "Hand-Chop / Strategy",
+    uniqueSkill: "Tactical IQ",
+    masteriesAchieved: "Speed, Strategy, Hand-Chop",
+    combatPath: "Tactical King",
+    masteryTags: ["speed", "technique", "strength"],
+    evolution: { vb: "Student", b: "Fighter", i: "King of Seoul", a: "King of Chungcheong", e: "White Snake" }
+  },
+  {
+    rank: 19,
+    name: "OG Daniel Park",
+    aliases: ["Original Daniel", "Little Daniel", "Daniel Park"],
+    faction: "J-High Allied",
+    archetypeKey: "ui-copy",
+    imageKey: "daniel",
+    primaryTechniques: "All Martial Arts",
+    uniqueSkill: "Systema / Copy",
+    masteriesAchieved: "Copy, Speed, Technique",
+    combatPath: "Original UI Evolution",
+    masteryTags: ["copy", "ui", "speed", "technique"],
+    evolution: { vb: "Fat Victim", b: "Slim Trainee", i: "Gun's Disciple", a: "First Gen Copy", e: "OG UI State" }
+  },
+  {
+    rank: 20,
+    name: "Johan Seong",
+    aliases: ["God Dog", "Copycat", "Infinite Copy"],
+    faction: "God Dog",
+    archetypeKey: "ui-copy",
+    imageKey: "johan",
+    primaryTechniques: "Boxing / Taekwondo",
+    uniqueSkill: "Infinite Copy",
+    masteriesAchieved: "Copy, Speed, Pure Software",
+    combatPath: "The Lone Path",
+    masteryTags: ["copy", "speed", "technique", "path"],
+    evolution: { vb: "Blind Boy", b: "God Dog", i: "Crew Head", a: "UI Copy (10s)", e: "Infinite Convergence" }
+  },
+  {
+    rank: 21,
+    name: "Jaegyeon Na",
+    aliases: ["King of Incheon", "Jaegyeon"],
+    faction: "First Generation",
+    archetypeKey: "speed-legend",
+    imageKey: "jaegyeon",
+    primaryTechniques: "Taekwondo / Kicks",
+    uniqueSkill: "Death Kick",
+    masteriesAchieved: "Speed, Technique",
+    combatPath: "Flawless Agility",
+    masteryTags: ["speed", "technique", "path"],
+    evolution: { vb: "Runner", b: "Kicker", i: "Fighter", a: "King of Incheon", e: "Uncatchable Agility" }
+  },
+  {
+    rank: 22,
+    name: "Taesoo Ma",
+    aliases: ["King of Ansan", "Iron Fist"],
+    faction: "First Generation",
+    archetypeKey: "king-strength",
+    imageKey: "taesoo",
+    primaryTechniques: "Pure Boxing (Right)",
+    uniqueSkill: "Iron Fist",
+    masteriesAchieved: "Strength Mastery",
+    combatPath: "Unyielding Right Hand",
+    masteryTags: ["strength", "conviction"],
+    evolution: { vb: "Brawler", b: "Boxer", i: "King of Ansan", a: "Eye-patch King", e: "Ultimate Single Fist" }
+  },
+  {
+    rank: 23,
+    name: "Gongseob Ji",
+    aliases: ["King of Daegu", "Iron Boxing"],
+    faction: "First Generation",
+    archetypeKey: "iron-boxing",
+    imageKey: "gongseob",
+    primaryTechniques: "Boxing / Iron Body",
+    uniqueSkill: "Counter Strike",
+    masteriesAchieved: "Endurance, Speed",
+    combatPath: "One Step One Kill",
+    masteryTags: ["endurance", "speed", "technique"],
+    evolution: { vb: "Monk Trainee", b: "Boxer", i: "King of Daegu", a: "Iron Fortress", e: "Counter-Master" }
+  },
+  {
+    rank: 24,
+    name: "Jake Kim",
+    aliases: ["Big Deal", "Gapryong's Legacy"],
+    faction: "Big Deal",
+    archetypeKey: "conviction-brawler",
+    imageKey: "jake",
+    primaryTechniques: "MMA / Brawling",
+    uniqueSkill: "Father's Blood",
+    masteriesAchieved: "Conviction / Overcome, Strength",
+    combatPath: "The Dragon's Fist",
+    masteryTags: ["conviction", "strength", "endurance"],
+    evolution: { vb: "MMA Trainee", b: "Big Deal No.2", i: "Prison Boss", a: "Purple Eyes", e: "Gapryong's Legacy" }
+  },
+  {
+    rank: 25,
+    name: "Paecheon Jo",
+    aliases: ["Dark Crocodile", "Black Blood", "Paecheon"],
+    faction: "Pre-Generation",
+    archetypeKey: "wild-wall",
+    imageKey: "paecheon",
+    primaryTechniques: "Brawling",
+    uniqueSkill: "Black Blood",
+    masteriesAchieved: "Endurance Mastery",
+    combatPath: "Accelerated Regen",
+    masteryTags: ["endurance", "strength", "conviction"],
+    evolution: { vb: "Delinquent", b: "Gangster", i: "Brawler", a: "Black Blood Awakening", e: "Healing Tank" }
+  },
+  {
+    rank: 26,
+    name: "Yujae Seon",
+    aliases: ["Yujae", "Counter-Feint"],
+    faction: "First Generation",
+    archetypeKey: "speed-legend",
+    imageKey: "yujae",
+    primaryTechniques: "Agility / Feints",
+    uniqueSkill: "Counter-Feint",
+    masteriesAchieved: "Speed, Technique",
+    combatPath: "Feint Variation",
+    masteryTags: ["speed", "technique"],
+    evolution: { vb: "Athlete", b: "Fighter", i: "Street Legend", a: "Feint Master", e: "Evasive Striker" }
+  },
+  {
+    rank: 27,
+    name: "Zack Lee",
+    aliases: ["Blue Eyes", "Iron Fortress"],
+    faction: "J-High Allied",
+    archetypeKey: "iron-boxing",
+    imageKey: "zack",
+    primaryTechniques: "In-Fighter Boxing",
+    uniqueSkill: "Iron Fortress",
+    masteriesAchieved: "Endurance, Speed",
+    combatPath: "The Boxer's Path",
+    masteryTags: ["endurance", "speed", "technique"],
+    evolution: { vb: "Bully", b: "Depressed Boxer", i: "Heat Mode", a: "Iron Fortress", e: "Speed-Counter Boxer" }
+  },
+  {
+    rank: 28,
+    name: "Vasco",
+    aliases: ["Euntae Lee", "Runner's High", "Brekdak's Legacy"],
+    faction: "Burn Knuckles",
+    archetypeKey: "conviction-brawler",
+    imageKey: "vasco",
+    primaryTechniques: "Muay Thai",
+    uniqueSkill: "Hero Mode",
+    masteriesAchieved: "Strength, Endurance",
+    combatPath: "Brekdak's Legacy",
+    masteryTags: ["strength", "endurance", "conviction"],
+    evolution: { vb: "Weak Victim", b: "Burn Knuckles", i: "Bear Trainee", a: "Forbidden Skills", e: "Hero Mode Master" }
+  },
+  {
+    rank: 29,
+    name: "Eli Jang",
+    aliases: ["Hostel", "Wildness"],
+    faction: "Hostel",
+    archetypeKey: "wild-wall",
+    imageKey: "eli",
+    primaryTechniques: "Wildness / Aikido",
+    uniqueSkill: "Dual Batons",
+    masteriesAchieved: "Technique, Animal Instinct",
+    combatPath: "Path of the Provider",
+    masteryTags: ["technique", "path", "weapon"],
+    evolution: { vb: "Runaway", b: "Hostel Head", i: "Tom Lee Disciple", a: "Baton Master", e: "Pure Wildness" }
+  },
+  {
+    rank: 30,
+    name: "Samuel Seo",
+    aliases: ["Heat Mode", "Controlled Rage"],
+    faction: "Workers / Big Deal",
+    archetypeKey: "king-strength",
+    imageKey: "samuel",
+    primaryTechniques: "Brawling / Dirty",
+    uniqueSkill: "Controlled Rage",
+    masteriesAchieved: "Endurance Mastery",
+    combatPath: "Path of Inferiority",
+    masteryTags: ["endurance", "conviction", "strength"],
+    evolution: { vb: "Gangnam Thug", b: "AC Repair", i: "Heat Mode", a: "Workers Exec", e: "Infinite Durability" }
+  },
+  {
+    rank: 31,
+    name: "Ryuhei Kuroda",
+    aliases: ["Kagiroi", "Magician", "Kanto Boss"],
+    faction: "Workers 2A",
+    archetypeKey: "weapon",
+    imageKey: "ryuhei",
+    primaryTechniques: "Biker Brawling",
+    uniqueSkill: "Kagiroi",
+    masteriesAchieved: "Speed Mastery",
+    combatPath: "Kagura Fireworks",
+    masteryTags: ["speed", "conviction", "weapon"],
+    evolution: { vb: "Biker", b: "Kanto Boss", i: "Commando", a: "Kagiroi State", e: "Fireworks Master" }
+  },
+  {
+    rank: 32,
+    name: "Sinu Han",
+    aliases: ["Boy of Promise", "Invisible Attacks"],
+    faction: "Big Deal",
+    archetypeKey: "speed-legend",
+    imageKey: "sinu",
+    primaryTechniques: "Taekwondo / MMA",
+    uniqueSkill: "Boy of Promise",
+    masteriesAchieved: "Speed Mastery / Partial IA",
+    combatPath: "Blind Spot Striker",
+    masteryTags: ["speed", "technique"],
+    evolution: { vb: "Street Kid", b: "Big Deal Head", i: "God of Combat", a: "Invisible Attacks", e: "The Boy of Promise" }
+  },
+  {
+    rank: 33,
+    name: "Warren Chae",
+    aliases: ["New CQC", "Hostel Uncle"],
+    faction: "Hostel",
+    archetypeKey: "striker",
+    imageKey: "warren",
+    primaryTechniques: "Jeet Kune Do",
+    uniqueSkill: "New CQC",
+    masteriesAchieved: "Technique Mastery",
+    combatPath: "Heart-Stop Path",
+    masteryTags: ["technique", "speed", "endurance"],
+    evolution: { vb: "Runaway", b: "Hostel Uncle", i: "JKD Trainee", a: "SMK Disciple", e: "New CQC Master" }
+  },
+  {
+    rank: 34,
+    name: "Mandeok Bang",
+    aliases: ["Bang Mandeok", "Workers Sword", "Mandeok"],
+    faction: "Workers",
+    archetypeKey: "king-strength",
+    imageKey: "mandeok",
+    primaryTechniques: "Capoeira",
+    uniqueSkill: "Super Strength",
+    masteriesAchieved: "Strength Mastery",
+    combatPath: "Gravity Striker",
+    masteryTags: ["strength", "technique", "endurance"],
+    evolution: { vb: "Student", b: "Brawler", i: "Workers Sword", a: "Capoeira Secret", e: "Peak Heavyweight" }
+  },
+  {
+    rank: 35,
+    name: "Yuseong",
+    aliases: ["Yuseong Yoo", "Smiling Demon", "Crying Beast"],
+    faction: "Workers VVIP",
+    archetypeKey: "wild-wall",
+    imageKey: "yuseong",
+    primaryTechniques: "Instinctual Fighting",
+    uniqueSkill: "Instinctive Genius",
+    masteriesAchieved: "Speed, Agility Path",
+    combatPath: "Feral Adaptation",
+    masteryTags: ["speed", "path", "technique"],
+    evolution: { vb: "Hidden Twin", b: "VVIP", i: "Smiling Demon", a: "Crying Beast", e: "Adaptable Predator" }
+  },
+  {
+    rank: 36,
+    name: "Hudson Ahn",
+    aliases: ["Sun of Ansan", "Taesoo's Disciple"],
+    faction: "Allied",
+    archetypeKey: "king-strength",
+    imageKey: "hudson",
+    primaryTechniques: "Single-Fist Boxing",
+    uniqueSkill: "Sun of Ansan",
+    masteriesAchieved: "Strength Mastery",
+    combatPath: "Unyielding Conviction",
+    masteryTags: ["strength", "conviction"],
+    evolution: { vb: "Trainee", b: "Taesoo's Disciple", i: "Ansan Sun", a: "Left Hand Mix", e: "Pure Right Hand" }
+  },
+  {
+    rank: 37,
+    name: "Jerry Kwon",
+    aliases: ["Sword of Jake", "Big Deal Enforcer"],
+    faction: "Big Deal",
+    archetypeKey: "king-strength",
+    imageKey: "jerry",
+    primaryTechniques: "Out-Fighter Boxing",
+    uniqueSkill: "Protector Mode",
+    masteriesAchieved: "Strength Mastery",
+    combatPath: "Sword of Jake",
+    masteryTags: ["strength", "endurance", "conviction"],
+    evolution: { vb: "Brawler", b: "Big Deal Enforcer", i: "Boxing Trainee", a: "Protector Mode", e: "Legacy Boxer" }
+  },
+  {
+    rank: 38,
+    name: "Jay Hong",
+    aliases: ["Systema / Kali Arnis", "Sophia's Disciple", "Hong Jay"],
+    faction: "J-High Allied",
+    archetypeKey: "weapon",
+    imageKey: "jay",
+    primaryTechniques: "Systema / Kali Arnis",
+    uniqueSkill: "Lethal Extraction",
+    masteriesAchieved: "Weapon Mastery",
+    combatPath: "Absolute Lethality",
+    masteryTags: ["weapon", "technique", "speed"],
+    evolution: { vb: "Silent Kid", b: "Kali Arnis", i: "Systema", a: "Sophia's Disciple", e: "Dual Sword Systema" }
+  },
+  {
+    rank: 39,
+    name: "Jihan Kwak",
+    aliases: ["Kwak Jichang's Brother", "Jihan", "Chungcheong Sub"],
+    faction: "Kwak Family",
+    archetypeKey: "striker",
+    imageKey: "jihan",
+    primaryTechniques: "Hand-Chop",
+    uniqueSkill: "Strategy",
+    masteriesAchieved: "Hand-Chop Path",
+    combatPath: "Strategy Striker",
+    masteryTags: ["technique", "speed"],
+    evolution: { vb: "Student", b: "Chungcheong Sub", i: "Hand-Chop Heir", a: "Tactical Fighter", e: "Strategic Chop" }
+  },
+  {
+    rank: 40,
+    name: "Jibeom Kwak",
+    aliases: ["Kwak Jibeom", "Bear Trap"],
+    faction: "Kwak Family",
+    archetypeKey: "king-strength",
+    imageKey: "jibeom",
+    primaryTechniques: "Brutal Brawling",
+    uniqueSkill: "Bear Trap",
+    masteriesAchieved: "Brutal Strength",
+    combatPath: "Street Boxing",
+    masteryTags: ["strength", "technique"],
+    evolution: { vb: "Student", b: "Rural Brawler", i: "Chungcheong Sub", a: "Bear Grip", e: "Brutal Striker" }
+  },
+  {
+    rank: 41,
+    name: "Kwak Chung-ho",
+    aliases: ["Chung-ho Kwak", "Thick Skin"],
+    faction: "Kwak Family",
+    archetypeKey: "wild-wall",
+    imageKey: "",
+    primaryTechniques: "Brawling",
+    uniqueSkill: "Thick Skin",
+    masteriesAchieved: "Regional Executive Hardware",
+    combatPath: "Tank Path",
+    masteryTags: ["endurance", "strength"],
+    evolution: { vb: "Thug", b: "Brawler", i: "Executive", a: "Sub-King", e: "Endurance Tank" }
+  },
+  {
+    rank: 42,
+    name: "Vin Jin",
+    aliases: ["Cheonliang Grip", "Bone Crusher"],
+    faction: "J-High / Cheonliang",
+    archetypeKey: "grappler",
+    imageKey: "vin",
+    primaryTechniques: "Kudo / Judo",
+    uniqueSkill: "Grip Strength",
+    masteriesAchieved: "Kudo Mastery",
+    combatPath: "Cheonliang Grip",
+    masteryTags: ["strength", "technique", "endurance"],
+    evolution: { vb: "Bullied Kid", b: "Middle School Boss", i: "Cheonliang Trainee", a: "Sunglasses Off", e: "Bone Crusher" }
+  },
+  {
+    rank: 43,
+    name: "Taejin Cheon",
+    aliases: ["Cheon Taejin", "Sinister Kudo"],
+    faction: "Cheonliang / Workers",
+    archetypeKey: "grappler",
+    imageKey: "taejin",
+    primaryTechniques: "Kudo",
+    uniqueSkill: "Sinister Synergy",
+    masteriesAchieved: "Kudo Path",
+    combatPath: "Hell Trainee",
+    masteryTags: ["strength", "technique"],
+    evolution: { vb: "Rich Kid", b: "Cheonliang Rival", i: "Hell Trainee", a: "Workers Exec", e: "Sinister Kudo" }
+  },
+  {
+    rank: 44,
+    name: "Yugang Ha",
+    aliases: ["Ha Yugang", "Feint Origin"],
+    faction: "Regional Powerhouse",
+    archetypeKey: "striker",
+    imageKey: "",
+    primaryTechniques: "MMA",
+    uniqueSkill: "Feint Origination",
+    masteriesAchieved: "Technique Mastery",
+    combatPath: "Feint Origin",
+    masteryTags: ["technique", "speed"],
+    evolution: { vb: "Gym Rat", b: "Fighter", i: "Feint User", a: "Feint Master", e: "Master of Deception" }
+  },
+  {
+    rank: 45,
+    name: "Baekjin Hyeon",
+    aliases: ["Hyeon Baekjin", "Kinetic Thrust"],
+    faction: "Regional Powerhouse",
+    archetypeKey: "king-strength",
+    imageKey: "",
+    primaryTechniques: "Brawling",
+    uniqueSkill: "Kinetic Thrust",
+    masteriesAchieved: "Single Mastery",
+    combatPath: "Kinetic Force",
+    masteryTags: ["strength", "technique"],
+    evolution: { vb: "Brawler", b: "Street Fighter", i: "Thug Boss", a: "Mastery Awakening", e: "Thrust Striker" }
+  },
+  {
+    rank: 46,
+    name: "Jeongseok Hwang",
+    aliases: ["Hwang Jeongseok", "Tactical Defense"],
+    faction: "Regional Powerhouse",
+    archetypeKey: "iron-boxing",
+    imageKey: "",
+    primaryTechniques: "Defensive Boxing",
+    uniqueSkill: "Tactical Defense",
+    masteriesAchieved: "Single Mastery",
+    combatPath: "Tactical Endurance",
+    masteryTags: ["endurance", "technique"],
+    evolution: { vb: "Boxer", b: "Defensive Fighter", i: "Tank", a: "Mastery Awakening", e: "Unbreakable Wall" }
+  },
+  {
+    rank: 47,
+    name: "Lineman",
+    aliases: ["Big Deal Lineman", "Sinu's Protege"],
+    faction: "Big Deal",
+    archetypeKey: "speed-legend",
+    imageKey: "",
+    primaryTechniques: "Brawling / Agility",
+    uniqueSkill: "Lightning Speed",
+    masteriesAchieved: "Speed Path",
+    combatPath: "Sinu's Protege",
+    masteryTags: ["speed", "technique"],
+    evolution: { vb: "Fodder", b: "Big Deal Spy", i: "Trainee", a: "Speed Awakening", e: "Lightning Striker" }
+  },
+  {
+    rank: 48,
+    name: "Logan Lee",
+    aliases: ["Adaptive Body", "Tank Grappler"],
+    faction: "Workers / J-High",
+    archetypeKey: "grappler",
+    imageKey: "logan",
+    primaryTechniques: "Grappling / BJJ",
+    uniqueSkill: "Adaptive Body",
+    masteriesAchieved: "Endurance Archetype",
+    combatPath: "Adaptive Grappling",
+    masteryTags: ["endurance", "strength", "technique"],
+    evolution: { vb: "Bully", b: "Grappler", i: "Jikjjang", a: "Secret Friend", e: "Tank Grappler" }
+  },
+  {
+    rank: 49,
+    name: "Kenta Magami",
+    aliases: ["Magami Kenta", "Red Eyes"],
+    faction: "Workers 2A",
+    archetypeKey: "striker",
+    imageKey: "kenta",
+    primaryTechniques: "Kyokushin",
+    uniqueSkill: "Red Eyes",
+    masteriesAchieved: "Iron Fist / Vengeance",
+    combatPath: "Vengeance Path",
+    masteryTags: ["conviction", "strength", "technique"],
+    evolution: { vb: "Magami Heir", b: "Survivor", i: "Executive", a: "Red Eyes", e: "Iron Fist Karate" }
+  },
+  {
+    rank: 50,
+    name: "Kazuma",
+    aliases: ["Sumo Hardware", "Yokozuna Path"],
+    faction: "Workers",
+    archetypeKey: "wild-wall",
+    imageKey: "",
+    primaryTechniques: "Sumo",
+    uniqueSkill: "Pure Mass",
+    masteriesAchieved: "Sumo Hardware",
+    combatPath: "Yokozuna Path",
+    masteryTags: ["strength", "endurance"],
+    evolution: { vb: "Wrestler", b: "Sumo Trainee", i: "Executive", a: "Mass Tank", e: "Peak Sumo" }
+  }
 ];
 
-const roster = rosterSeed.map((entry, index) => {
-  const [name, alias, faction, tier, archetypeKey, imageKey, masteryText] = entry;
-  const archetype = ARCHETYPES[archetypeKey] || ARCHETYPES.crew;
-  const rank = index + 1;
-  const masteries = masteryText.split(" ");
+const EXTENDED_ARCHIVE_BACKLOG = [
+  "Sophia",
+  "Xiaolong",
+  "Olly Wang",
+  "Baekho Kwon",
+  "Hansu Seong",
+  "Brekdak",
+  "Shintaro Yamazaki",
+  "Jaeha Kim",
+  "Seokdu Wang",
+  "Hangyeol Baek",
+  "Bongae Choi",
+  "Bakgu Noh"
+];
+
+const roster = PDF_FIGHTER_DATABASE.map((entry) => {
+  const archetype = ARCHETYPES[entry.archetypeKey] || ARCHETYPES.crew;
+  const masteries = entry.masteryTags;
   const accent = masteries.includes("speed")
     ? MASTERY_META.speed.color
     : masteries.includes("strength")
@@ -581,23 +1244,45 @@ const roster = rosterSeed.map((entry, index) => {
         : masteries.includes("endurance")
           ? MASTERY_META.endurance.color
           : MASTERY_META.conviction.color;
+  const alias = entry.aliases[0] || entry.uniqueSkill;
+  const tier = entry.rank <= 10 ? "PDF Top 10" : entry.rank <= 20 ? "PDF Top 20" : "PDF 21-50";
+  const analysis = `${entry.combatPath}: ${entry.primaryTechniques}. Signature lane: ${entry.uniqueSkill}.`;
 
   return {
-    id: `${rank}-${slug(name)}-${slug(alias)}`,
-    rank,
-    name,
+    id: `${entry.rank}-${slug(entry.name)}-${slug(alias)}`,
+    rank: entry.rank,
+    name: entry.name,
     alias,
-    faction,
+    aliases: entry.aliases,
+    faction: entry.faction,
     tier,
-    archetypeKey,
+    archetypeKey: entry.archetypeKey,
     archetype: archetype.label,
     style: archetype.style,
-    analysis: archetype.analysis,
+    analysis,
     masteries,
-    imageKey,
+    imageKey: entry.imageKey,
     accent,
-    stats: makeStats(rank, masteries, archetypeKey),
-    routine: archetype.routine
+    stats: makeStats(entry.rank, masteries, entry.archetypeKey),
+    routine: archetype.routine,
+    primaryTechniques: entry.primaryTechniques,
+    uniqueSkill: entry.uniqueSkill,
+    masteriesAchieved: entry.masteriesAchieved,
+    combatPath: entry.combatPath,
+    evolution: entry.evolution,
+    searchText: [
+      entry.name,
+      alias,
+      entry.aliases.join(" "),
+      entry.faction,
+      tier,
+      archetype.label,
+      entry.primaryTechniques,
+      entry.uniqueSkill,
+      entry.masteriesAchieved,
+      entry.combatPath,
+      masteries.join(" ")
+    ].join(" ").toLowerCase()
   };
 });
 
@@ -4674,10 +5359,7 @@ function renderFighters() {
 function filteredRoster() {
   const query = state.query.trim().toLowerCase();
   if (!query) return roster;
-  return roster.filter((fighter) => [fighter.name, fighter.alias, fighter.faction, fighter.tier, fighter.archetype, fighter.masteries.join(" ")]
-    .join(" ")
-    .toLowerCase()
-    .includes(query));
+  return roster.filter((fighter) => fighter.searchText.includes(query));
 }
 
 function renderFighterRow(fighter) {
@@ -4688,7 +5370,9 @@ function renderFighterRow(fighter) {
         <span class="tiny">#${String(fighter.rank).padStart(3, "0")} · ${escapeHtml(fighter.tier)}</span>
         <h2>${escapeHtml(fighter.name)}</h2>
         <span class="ko-small">${escapeHtml(fighterDeep(fighter).ko || fighter.alias)}</span>
+        <span class="fighter-record-line">${escapeHtml(fighter.combatPath)}</span>
         <p>${escapeHtml(fighter.analysis)}</p>
+        <span class="fighter-tech-line">${escapeHtml(fighter.primaryTechniques)} · ${escapeHtml(fighter.uniqueSkill)}</span>
         ${renderTags(fighter.masteries.slice(0, 4))}
       </span>
     </button>
@@ -4721,12 +5405,15 @@ function renderFighterDetail(fighter) {
       </article>
 
       <div class="detail-stack">
+        ${renderPdfCombatRecord(fighter)}
+        ${renderEvolutionTimeline(fighter)}
         ${detailBlock("Fighter Profile", fighter.analysis)}
         ${detailBlock("Unique Skill", deep.uniqueSkill)}
         ${detailBlock("Fighting Style", deep.fightingStyle || fighter.style)}
         ${detailBlock("Physique", deep.physique)}
         ${detailBlock("Training Method", deep.trainingMethod)}
         ${renderRoutinePanel(fighter)}
+        ${renderFighterTrainingLinks(fighter)}
         ${detailBlock("Career Achievement", deep.achievement)}
         ${renderWikiCard(fighter)}
         <article class="source-card" style="--accent:${fighter.accent}">
@@ -4740,6 +5427,131 @@ function renderFighterDetail(fighter) {
       </div>
     </section>
   `;
+}
+
+function renderPdfCombatRecord(fighter) {
+  const facts = [
+    ["Primary Techniques", fighter.primaryTechniques],
+    ["Unique Skill", fighter.uniqueSkill],
+    ["Masteries / Thresholds", fighter.masteriesAchieved],
+    ["Combat Path", fighter.combatPath]
+  ];
+  return `
+    <article class="combat-record-card" style="--accent:${fighter.accent}">
+      <div class="section-label">PDF Combat Record</div>
+      <div class="combat-record-grid">
+        ${facts.map(([label, value]) => `
+          <section>
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(value)}</strong>
+          </section>
+        `).join("")}
+      </div>
+    </article>
+  `;
+}
+
+function renderEvolutionTimeline(fighter) {
+  const stages = [
+    ["Very Beginner", fighter.evolution.vb],
+    ["Beginner", fighter.evolution.b],
+    ["Intermediate", fighter.evolution.i],
+    ["Advanced", fighter.evolution.a],
+    ["Expert / Peak", fighter.evolution.e]
+  ];
+  return `
+    <article class="evolution-card" style="--accent:${fighter.accent}">
+      <div class="section-label">5-Stage Evolution Path</div>
+      <div class="evolution-timeline">
+        ${stages.map(([label, value], index) => `
+          <section>
+            <span>${String(index + 1).padStart(2, "0")}</span>
+            <div>
+              <em>${escapeHtml(label)}</em>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+          </section>
+        `).join("")}
+      </div>
+    </article>
+  `;
+}
+
+function renderFighterTrainingLinks(fighter) {
+  const links = fighterTrainingLinks(fighter);
+  return `
+    <article class="fighter-training-card" style="--accent:${fighter.accent}">
+      <div class="section-label">Linked Training Routes</div>
+      <p>Open the matching martial-art or fighter-type progression without leaving the current system flow.</p>
+      <div class="fighter-training-links">
+        ${links.map((link) => `
+          <button type="button" ${link.type === "art" ? `data-open-art="${escapeHtml(link.id)}"` : `data-open-fighter-type="${escapeHtml(link.id)}"`}>
+            <span>${escapeHtml(link.kind)}</span>
+            <strong>${escapeHtml(link.label)}</strong>
+          </button>
+        `).join("")}
+      </div>
+    </article>
+  `;
+}
+
+function fighterTrainingLinks(fighter) {
+  const text = `${fighter.primaryTechniques} ${fighter.uniqueSkill} ${fighter.masteriesAchieved} ${fighter.combatPath} ${fighter.archetypeKey}`.toLowerCase();
+  const links = [];
+  const addArt = (label, patterns) => {
+    if (patterns.some((pattern) => text.includes(pattern))) {
+      links.push({ type: "art", kind: "Martial Art", id: slug(label), label });
+    }
+  };
+
+  addArt("Boxing / Iron Boxing", ["boxing", "iron body", "iron fortress", "counter strike"]);
+  addArt("Muay Thai / Runner's High", ["muay thai", "runner", "elbow"]);
+  addArt("Yamazaki Kyokushin Karate", ["kyokushin", "yakuza", "yamazaki"]);
+  addArt("Aikido / Joint Control", ["aikido", "joint"]);
+  addArt("Systema / Security Combat", ["systema", "security"]);
+  addArt("Kali / Weapon Handling", ["kali", "arnis", "weapon", "blade", "wire", "sword"]);
+  addArt("Capoeira / Evasion Kicks", ["capoeira", "evasion"]);
+  addArt("Taekwondo / Kick Precision", ["taekwondo", "kick", "agility"]);
+  addArt("Judo / Kudo / Ssireum Grappling", ["judo", "kudo", "ssireum", "wrestling", "grappling", "sumo", "grip"]);
+  addArt("CQC / Jeet Kune Do", ["cqc", "jeet kune do", "close"]);
+  addArt("Copy-Adaptive Mixed Martial Arts", ["copy", "all martial", "mma", "adaptive"]);
+  addArt("Street Fighting / Wildness", ["wildness", "brawling", "street", "feral"]);
+
+  const typeId = archetypeTrainingTypeId(fighter.archetypeKey);
+  const type = FIGHTER_TYPE_TRAINING.find((item) => fighterTypeId(item) === typeId);
+  if (type) links.unshift({ type: "fighter", kind: "Fighter Type", id: typeId, label: type.type });
+
+  if (links.length < 3) {
+    links.push({ type: "art", kind: "Martial Art", id: slug("Copy-Adaptive Mixed Martial Arts"), label: "Copy-Adaptive Mixed Martial Arts" });
+  }
+
+  return dedupeTrainingLinks(links).slice(0, 6);
+}
+
+function dedupeTrainingLinks(links) {
+  const seen = new Set();
+  return links.filter((link) => {
+    const key = `${link.type}:${link.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function archetypeTrainingTypeId(archetypeKey) {
+  const map = {
+    "ui-copy": "copy-ui-engine",
+    "speed-legend": "speed-legend",
+    "wild-wall": "wild-wall",
+    weapon: "weapon-specialist",
+    "king-strength": "king-strength",
+    "iron-boxing": "iron-boxing",
+    "conviction-brawler": "conviction-brawler",
+    grappler: "grappler",
+    striker: "technical-striker",
+    crew: "crew-enforcer"
+  };
+  return map[archetypeKey] || "crew-enforcer";
 }
 
 function renderVault() {
@@ -4811,16 +5623,22 @@ function vaultAccent(type) {
 }
 
 function fighterDeep(fighter) {
-  const found = FIGHTER_DEEP_DIVE[fighter.name] || FIGHTER_DEEP_DIVE[fighter.name.replace(/^UI /, "")];
+  const candidates = [
+    fighter.name,
+    fighter.name.replace(/\s*\(Prime\)/, ""),
+    fighter.name.replace(/^UI /, ""),
+    ...(fighter.aliases || [])
+  ];
+  const found = candidates.map((name) => FIGHTER_DEEP_DIVE[name]).find(Boolean);
   if (found) return found;
   return {
     ko: fighter.alias,
-    quote: `${fighter.name} is trained here as a ${fighter.archetype.toLowerCase()} archetype.`,
-    uniqueSkill: getModeFocus(fighter),
-    fightingStyle: fighter.style,
+    quote: `${fighter.name} follows the ${fighter.combatPath} route: ${fighter.uniqueSkill}.`,
+    uniqueSkill: `${fighter.uniqueSkill}: ${getModeFocus(fighter)} expressed through ${fighter.primaryTechniques}.`,
+    fightingStyle: `${fighter.primaryTechniques}. App route: ${fighter.style}`,
     physique: physiqueFor(fighter),
-    achievement: `${fighter.faction} representative in your top-50 roster.`,
-    trainingMethod: trainingBullets(fighter).join(" ")
+    achievement: `${fighter.faction} representative in the PDF-ranked top-50 roster. Peak marker: ${fighter.evolution.e}.`,
+    trainingMethod: `${fighter.combatPath} progression: ${Object.values(fighter.evolution).join(" -> ")}. ${trainingBullets(fighter).join(" ")}`
   };
 }
 
