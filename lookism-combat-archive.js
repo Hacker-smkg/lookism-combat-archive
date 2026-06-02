@@ -885,6 +885,149 @@ const FIGHTER_TYPE_TRAINING = [
   }
 ];
 
+const FIGHTER_TYPE_RESEARCH_GUIDES = {
+  "copy-ui-engine": {
+    research: "PDF lineage: Copy Geniuses. This route trains visual tracking, safe copying, hardware support, range switching, fatigue reaction, and personal path creation.",
+    core: [
+      "Awakening: baseline cardio, mirror copy, visual tracking, and one stable stance.",
+      "Software expansion: slow repetitions until the copied movement has a purpose.",
+      "Hardware forging: strength, mobility, and conditioning so copied movement does not break form.",
+      "First Gen mimicry: copy principles across striking, grappling, and evasive ranges.",
+      "UI translation: automatic simple answers after controlled fatigue, never unsafe exhaustion.",
+      "Infinite convergence: copied library becomes one signature path chain."
+    ],
+    precision: ["Copy structure before speed", "One base stance anchors every borrowed move", "Film and name the purpose of each copied technique", "Fatigue drills must simplify the answer"],
+    mistakes: ["Copying highlight violence literally", "Changing styles every rep", "Skipping hardware work", "Trying to force UI instead of reaction training"],
+    physique: "Copy/UI build: balanced athletic base, mobile joints, resilient trunk, and enough conditioning to keep technique alive under fatigue."
+  },
+  "speed-legend": {
+    research: "PDF lineage: Invisible Attackers & Speed Demons. This route turns blind-spot lore into sprint starts, angle entries, capoeira rhythm, kick precision, and non-telegraphed exits.",
+    core: [
+      "Plyometric base: sprint starts, ginga rhythm, mobility, and target accuracy.",
+      "Kick-chain base: chamber, round/crescent kicks, stance switches, and safe acrobatics.",
+      "Blind-spot targeting: step outside the vision cone before striking.",
+      "Speed threshold: remove shoulder/hip telegraphs and leave after contact.",
+      "Invisible-attack translation: random callouts, blind-side pads, and fatigue accuracy.",
+      "Speed path: rhythm change, blind-side entry, fast touch, clean exit."
+    ],
+    precision: ["Feet create the angle before hands chase speed", "No shoulder lift before entry", "Every strike has an exit", "Fast means early and clean, not frantic"],
+    mistakes: ["Only training hand speed", "Skipping hip and ankle prep", "Using flashy kicks before landings", "Forgetting the exit"],
+    physique: "Speed Legend build: lean legs, elastic hips, strong ankles, mobile spine, and repeat sprint capacity."
+  },
+  "wild-wall": {
+    research: "PDF lineage: Muay Thai Hardware Tanks plus Tom/Eli wildness. This route translates extreme feats into carries, sled work, clinch pressure, scenario control, and heavy-but-safe contact.",
+    core: [
+      "Wall base: carries, pummeling, breakfalls, guard recovery, and posture.",
+      "Pressure body: low-kick/clinching basics, wall pins, grip switches, and hill work.",
+      "Hardware tank: posterior-chain strength, sandbag work, and breath under pressure.",
+      "Wildness control: uneven-footing scenarios, crush-and-exit drills, and environment awareness.",
+      "Demonic charge translation: short pressure surges without losing defensive shape.",
+      "Wild wall path: make clean exchanges hard while your own pressure stays measurable."
+    ],
+    precision: ["Pressure starts at the feet", "Grip connects to hips before force", "Chaos drills still have exit rules", "Do not trade defense for intimidation"],
+    mistakes: ["Turning wildness into random swinging", "Training pain instead of skill", "Skipping neck/hip mobility", "Maxing carries too often"],
+    physique: "Wild Wall build: thick back, grip, trunk, neck, and legs with enough lungs to keep moving."
+  },
+  "weapon-specialist": {
+    research: "PDF lineage: Lethal Weapons and CQC. This route is escape-first: foam tools, distance, grip endurance, object awareness, and safe disarm simulations.",
+    core: [
+      "Weapon familiarity: stance, grip, angle lines, and exit habits.",
+      "Range switch: check hand, retreat-entry timing, and foam disarm basics.",
+      "CQC circle: one-step spatial awareness, target-line defense, and exit sprint.",
+      "Unconventional object defense: towel/belt/stick scenarios with low speed.",
+      "Blade discipline translation: distance control and no-contact line drills.",
+      "Weapon path: read threat, angle out, control line, escape."
+    ],
+    precision: ["Escape is the win condition", "Step before the tool moves", "Protect the live hand", "Real weapons are not sport rounds"],
+    mistakes: ["Chasing the weapon", "Standing inside range", "Practicing harmful targets on people", "Using rigid tools too early"],
+    physique: "Weapon Specialist build: forearm density, shoulder endurance, footwork stamina, and calm under threat cues."
+  },
+  "king-strength": {
+    research: "PDF lineage: Iron Fortress single-fist kings and hardware tanks. This route builds one-line force through compounds, med-ball throws, heavy bags, bracing, and clean pivots.",
+    core: [
+      "Foundation: squat, hinge, push, pull, bracing, and single-shot bag mechanics.",
+      "Force line: wrist/shoulder armor, med-ball throws, and rooted footwork.",
+      "Hardware: heavy carries, controlled bag power, and posterior-chain density.",
+      "King shot: hip pivot, whole-body timing, and one-punch setup rounds.",
+      "Threshold breaker: repeat power late without losing stance or guard.",
+      "King path: one simple strike becomes identity because the whole body arrives."
+    ],
+    precision: ["Power starts from the floor", "Stop max work before joints complain", "One clean shot beats ten sloppy ones", "Progress load weekly, not emotionally"],
+    mistakes: ["Punching hard surfaces", "Testing maxes too often", "Ignoring rotator cuff work", "Leaning past the base"],
+    physique: "King Strength build: dense legs, trunk, shoulders, wrists, and heavy pulling power."
+  },
+  "iron-boxing": {
+    research: "PDF lineage: Iron Fortress Boxers. This route is roadwork, jab/footwork, slip-line, breath-led defense, safe body conditioning, and counter timing.",
+    core: [
+      "Sweet science: stance, guard, jab path, rope cadence, and breathing.",
+      "In/out fighting: slip-line, body-head combos, and angle exits.",
+      "Iron body translation: controlled contact, brace breath, reset, counter.",
+      "Speed-counter layer: fast entries, pivots, and single-shot accuracy.",
+      "Counter mastery: answer in the same beat without losing defense.",
+      "Iron Fortress path: absorb safe contact, reset, counter, and leave."
+    ],
+    precision: ["Exhale through contact", "Chin hidden without hunching", "Counter short enough to keep guard", "Roadwork supports precision, not punishment"],
+    mistakes: ["Hard body shots without coaching", "Dropping hands after counters", "Ducking from the waist", "Running so hard skill work dies"],
+    physique: "Iron Boxing build: resilient legs/lungs, strong trunk, durable shoulders, and compact counter mechanics."
+  },
+  "conviction-brawler": {
+    research: "PDF lineage: Conviction Brawlers. This route turns protection/rage/self-belief into structured output: strength, pressure, breath reset, and emotional control.",
+    core: [
+      "Street survival translation: guard, balance, safe contact, and showing up consistently.",
+      "Structured brawling: boxing/MMA basics, bag power, clinch survival, and roadwork.",
+      "Overcome wall: failure-safe circuits, breath under fatigue, and last-round discipline.",
+      "Trigger control: purpose journaling, pressure rounds, and emotional downshift after training.",
+      "Aura mastery translation: repeat output late while staying technically responsible.",
+      "Conviction path: emotion becomes a rule set, not reckless violence."
+    ],
+    precision: ["Name the reason before hard work", "Aggression must stay coachable", "Final reps still count only if clean", "Cool down after heat blocks"],
+    mistakes: ["Using self-hate as the whole fuel source", "Brawling without structure", "Skipping recovery", "Treating anger as technique"],
+    physique: "Conviction Brawler build: sturdy trunk, repeat-output lungs, strong clinch, and calm after adrenaline."
+  },
+  grappler: {
+    research: "PDF lineage: Cheonliang Grapplers. This route translates Mujin/Vin feats into breakfalls, grips, kuzushi, hip throws, Kudo entries, and heavy posterior-chain work.",
+    core: [
+      "Cheonliang base: ukemi, grips, hips, stance, and safe falling.",
+      "Ssireum/Judo fundamentals: balance breaking, hip throws, sweeps, towel pulls.",
+      "Hell training translation: carries, hinges, rope/towel rows, and mat returns.",
+      "Kudo integration: strike-to-grip entries, trips, pins, and escapes.",
+      "Iron grip expert: latch, improve angle, finish position.",
+      "Mujin path: grip, angle, uproot, control."
+    ],
+    precision: ["Break posture before throw", "Grip connects to hips", "Mats and supervision are non-negotiable", "Strength amplifies kuzushi"],
+    mistakes: ["Yanking with arms", "Skipping breakfalls", "Throwing tired partners", "Ignoring finger/neck recovery"],
+    physique: "Grappler build: posterior chain, neck, hands, hips, trunk, and enough cardio for scrambles."
+  },
+  "technical-striker": {
+    research: "PDF lineage: hand-chop strategists, CQC strikers, Taekwondo kickers, and Kyokushin vengeance types. This route prioritizes exact lines, intercepting counters, and decision speed.",
+    core: [
+      "Base line: jab, round kick, stance switch, guard recovery, and pad accuracy.",
+      "Timing layer: slip-line, intercept step, kick-to-punch transition, and angle exit.",
+      "Decision tree: one-step counters, hand-chop/straight-line targets, and film notes.",
+      "Pressure skill: CQC bursts, spinning-kick recovery, and crowd-angle discipline.",
+      "Expert compression: read, enter, hit, leave with no dead beat.",
+      "Technique path: one precise answer for each major range."
+    ],
+    precision: ["No wasted motion", "Every entry has a planned exit", "Accuracy rises before speed", "Film one small correction weekly"],
+    mistakes: ["Collecting tricks", "Telegraphing shoulder/hip movement", "Skipping guard recovery", "Trying advanced kicks before landing control"],
+    physique: "Technical Striker build: mobile hips, strong calves, durable shoulders, fast hands, and calm eyes."
+  },
+  "crew-enforcer": {
+    research: "PDF lineage: street pressure and crew survival. This route keeps the realism: conditioning, wall awareness, escape patterns, recovery after bad exchanges, and teamwork discipline.",
+    core: [
+      "Foundation: strength circuit, shuttle runs, guard recovery, wall awareness.",
+      "Close range: two-on-one escape patterns, wall pin defense, and grip finishers.",
+      "Pressure base: controlled chaos rounds, breath reset, and repeat-output circuits.",
+      "Scenario control: uneven footing, crowd angles, verbal de-escalation, and exit choice.",
+      "Enforcer expert: recover after a bad exchange and regain position quickly.",
+      "Crew path: durable, hard to panic, and useful under pressure."
+    ],
+    precision: ["Protect head first", "Frame before striking", "Exit beats winning ego exchanges", "Conditioning must support judgment"],
+    mistakes: ["Random swinging", "Ignoring terrain", "Training ego", "Skipping recovery because the route is gritty"],
+    physique: "Crew Enforcer build: practical strength, grip, shuttle conditioning, and durable trunk."
+  }
+};
+
 const FIGHTER_TYPE_PROGRAMS = Object.fromEntries(FIGHTER_TYPE_TRAINING.map((type) => {
   const id = fighterTypeId(type);
   const linkedArts = {
@@ -899,12 +1042,15 @@ const FIGHTER_TYPE_PROGRAMS = Object.fromEntries(FIGHTER_TYPE_TRAINING.map((type
     "technical-striker": ["Boxing / Iron Boxing", "Taekwondo / Kick Precision", "CQC / Jeet Kune Do"],
     "crew-enforcer": ["Street Fighting / Wildness", "CQC / Jeet Kune Do"]
   };
+  const guide = FIGHTER_TYPE_RESEARCH_GUIDES[id] || {};
   return [id, {
-    core: [type.base, type.beginner, type.intermediate, type.advanced, `${type.advanced} Add film review and controlled pressure.`, type.mastery],
-    precision: ["Pick one measurable specialty", "Keep a recovery cap after hard days", "Film one round per week", "Progress skill before intensity"],
-    mistakes: ["Copying a fighter's recklessness", "Skipping base conditioning", "Changing archetypes every week", "Training pain instead of adaptation"],
-    safety: "Fighter-type training is fictional archetype translation. Use coaching, pads, mats, and controlled contact.",
-    physique: `${type.type} build: develop the body qualities that support ${type.base.toLowerCase()}`,
+    research: guide.research,
+    core: guide.core || [type.base, type.beginner, type.intermediate, type.advanced, `${type.advanced} Add film review and controlled pressure.`, type.mastery],
+    precision: guide.precision || ["Pick one measurable specialty", "Keep a recovery cap after hard days", "Film one round per week", "Progress skill before intensity"],
+    mistakes: guide.mistakes || ["Copying a fighter's recklessness", "Skipping base conditioning", "Changing archetypes every week", "Training pain instead of adaptation"],
+    safety: guide.safety || "Fighter-type training is fictional archetype translation. Use coaching, pads, mats, and controlled contact.",
+    physique: guide.physique || `${type.type} build: develop the body qualities that support ${type.base.toLowerCase()}`,
+    levels: guide.levels,
     linkedArts: linkedArts[id] || ["Boxing / Iron Boxing", "Street Fighting / Wildness"],
     sourceLinks: [["Lookism Characters", WIKI_CHARACTERS_URL], ["Lookism Mastery", WIKI_MASTERY_URL]]
   }];
@@ -1221,6 +1367,45 @@ const TECHNIQUE_LEVELS = [
   { id: "technique-mastery", label: "Technique Mastery", weeks: "Technique Mastery", xp: 520, schedule: "Ongoing · deliberate practice · coach review when possible" }
 ];
 
+const LEVEL_DETAIL_BLUEPRINTS = {
+  "very-beginner": {
+    load: "RPE 4-5. Leave two clean reps in reserve.",
+    dose: "2 technique sessions, 1 easy conditioning session, daily 8-minute mobility.",
+    recovery: "No hard sparring. Walk, sleep, and joint prep matter more than intensity.",
+    unlock: "Clean foundations on video: balance, breathing, and no pain compensation."
+  },
+  beginner: {
+    load: "RPE 5-6. Add volume only when the final set still looks sharp.",
+    dose: "3 technique sessions, 1 strength/conditioning day, 1 optional recovery walk.",
+    recovery: "Use one rest day after lower-body impact or heavy grip work.",
+    unlock: "Complete two full weeks while logging one correction after every session."
+  },
+  intermediate: {
+    load: "RPE 6-7. Introduce timing, partner cues, and fatigue with form caps.",
+    dose: "3 skill sessions, 1 strength day, 1 conditioning day, film one round weekly.",
+    recovery: "Deload every fourth week or anytime joints feel irritated.",
+    unlock: "Show one corrected mistake under light pressure, not just in shadow work."
+  },
+  advanced: {
+    load: "RPE 7-8. Pressure blocks are short, planned, and followed by cooldowns.",
+    dose: "4 skill/conditioning sessions, 1 benchmark day, 2 recovery slots.",
+    recovery: "Hard contact and high-impact work cannot stack on back-to-back days.",
+    unlock: "Clear a fatigue round while preserving guard, posture, exits, and breathing."
+  },
+  expert: {
+    load: "RPE 8 with strict stop rules. Quality decides progression, not suffering.",
+    dose: "5 focused sessions: skill, strength, speed, conditioning, review.",
+    recovery: "One full rest day plus one low-intensity mobility/breathing day.",
+    unlock: "Run a constraint round and explain the purpose of each major movement."
+  },
+  "technique-mastery": {
+    load: "Wave intensity. Three-week build, one-week deload, repeat with one signature test.",
+    dose: "Ongoing deliberate practice with coach review, film review, and benchmark retests.",
+    recovery: "Mastery requires staying trainable; pain spikes pause the block.",
+    unlock: "Build one signature chain that survives fatigue, pressure, and your own body limits."
+  }
+};
+
 const MARTIAL_ART_TECHNIQUE_PROGRAMS = {
   "boxing-iron-boxing": {
     core: ["Stance line", "High guard", "Jab path", "Cross hip rotation", "Slip-line", "Counter after block", "Iron-body breathing"],
@@ -1293,6 +1478,101 @@ const MARTIAL_ART_TECHNIQUE_PROGRAMS = {
     precision: ["Protect head first", "Frame before striking", "Exit beats winning exchanges"],
     mistakes: ["Random swinging", "Ignoring terrain", "Training ego instead of safety"],
     safety: "Scenario drills are for de-escalation and escape. Avoid real confrontations."
+  }
+};
+
+function makeLevelMap(stages) {
+  return Object.fromEntries(TECHNIQUE_LEVELS.map((level, index) => [level.id, stages[index] || stages[stages.length - 1]]));
+}
+
+const ART_RESEARCH_GUIDES = {
+  "boxing-iron-boxing": {
+    research: "PDF lineage used: Iron Fortress Boxers. Safe translation: jab/footwork, slip-line, breath-led defense, counter timing, and controlled body-conditioning instead of rock/anvil impact.",
+    levels: makeLevelMap([
+      { focus: "Sweet Science base: stance, guard, jab line, rear-hand return.", drill: "3 rounds mirror stance, 5x2 min jab-only shadowboxing, 4x20 rope steps, 3x60 sec wall-guard hold.", precision: "The jab returns to cheek before the rear hand moves.", mistake: "Reaching with the head past the lead knee.", unlock: "Film 3 clean jab-footwork rounds without crossing feet.", recovery: "Wrists stay neutral; use wraps for bag work." },
+      { focus: "In-fighting/out-fighting: 1-2-3, duck, weave, angle exit.", drill: "Slip rope 20 min, bag 5x2 min light combinations, 40 step-back counters, 10 min nasal cooldown.", precision: "Every slip ends with eyes still on target.", mistake: "Ducking from the waist instead of bending knees.", unlock: "Complete 5 bag rounds where every combo finishes with an exit.", recovery: "No hard head contact; keep partner work technical." },
+      { focus: "Iron Boxing breath: absorb safe contact, reset, counter.", drill: "Block-counter 8x45 sec, long-guard walk 5x2 min, medicine-ball body brace 3x10 light, roadwork 25-35 min.", precision: "Exhale through contact and reset posture before answering.", mistake: "Tensing the whole body for too long after impact.", unlock: "Counter within one beat after a controlled body-pad touch.", recovery: "Body-shot conditioning needs a coach and low force." },
+      { focus: "Speed threshold plus single-fist mechanics: fast entry, clean pivot, no over-swing.", drill: "6x60 m strides, single-shot bag rounds 10x5, med-ball punch throw 5x3, slip-counter timing 6 rounds.", precision: "Power starts from foot pivot, then hip, then shoulder.", mistake: "Trying to punch harder by sacrificing balance.", unlock: "Land 30 clean single shots with identical stance recovery.", recovery: "Shoulders and wrists get prehab before power rounds." },
+      { focus: "Counter mastery: trade safely, make the answer arrive in the same frame.", drill: "Counter-only spar constraints, double-end bag 6x2 min, film review 20 min, late-round accuracy test.", precision: "The counter is short enough that the guard never disappears.", mistake: "Waiting to admire the counter instead of exiting.", unlock: "Explain and demonstrate 3 counter choices from one jab entry.", recovery: "Limit hard rounds; fatigue should not change head position." },
+      { focus: "Personal Iron Fortress chain: jab entry, absorb/reset, counter, angle out.", drill: "Design one 4-beat chain, pressure-test it 6 rounds, retest weekly with one variable changed.", precision: "Your chain must work when tired and when the opponent changes rhythm.", mistake: "Calling it mastery before it survives constraints.", unlock: "Use your chain in three separate constraint rounds without form collapse.", recovery: "Deload after benchmark weeks." }
+    ])
+  },
+  "yamazaki-kyokushin-karate": {
+    research: "PDF lineage used: Yamazaki Iron Body. Safe translation: stance, kata, makiwara-style pads, breath control, and controlled impact tolerance instead of bone-breaking or live-weapon contact.",
+    levels: makeLevelMap([
+      { focus: "Clan initiation base: rooted stance, straight punch, low-kick line.", drill: "Stance holds 6x45 sec, kata basics 20 min, pad straight punches 5x20, shin mobility 8 min.", precision: "Feet grip the floor while shoulders stay relaxed.", mistake: "Locking knees during stance work.", unlock: "Hold stance and throw 50 straight punches without posture leak.", recovery: "No knuckle impact on hard surfaces." },
+      { focus: "Makiwara translation: progressive pad contact and breath-led bracing.", drill: "Wrapped pad punches 5x20, low-kick bag 5x15/side, light medicine-ball brace 3x8, kata 15 min.", precision: "Contact is crisp, not angry; breath lands with the strike.", mistake: "Confusing pain tolerance with useful adaptation.", unlock: "Finish pad contact with zero wrist pain next day.", recovery: "Skin, wrists, shins, and elbows get gradual exposure only." },
+      { focus: "Weather/pressure conditioning translated into calm breathing under fatigue.", drill: "Hill walk 20 min, cold-air breathing or cool shower 2 min, bag 6x2 min, defensive shell 5 rounds.", precision: "Breath rhythm stays steady when heart rate rises.", mistake: "Going too hard until kata becomes sloppy.", unlock: "Complete 6 bag rounds with the final round still clean.", recovery: "Cold exposure is optional and never a punishment." },
+      { focus: "White Ghost layer: catch, pivot, off-balance, counter.", drill: "Slow parry-catch entries 5x3 min, pivot throw mechanics 30 reps, low-kick return 5x10, film notes.", precision: "Angle before force; the pivot steals posture.", mistake: "Forcing the arm before moving your feet.", unlock: "Show 3 slow catch-to-counter entries with partner consent.", recovery: "Joint-control reps stay slow." },
+      { focus: "UI discipline translation: automatic simple answers under fatigue.", drill: "Exhaustion shadowboxing 4x3 min, random pad calls 10x30 sec, kata while tired 15 min, cooldown breathing.", precision: "The answer is boring, clean, and immediate.", mistake: "Chasing a fictional unconscious state instead of reaction training.", unlock: "React to 20 random pad calls with no freeze and no wild swings.", recovery: "Stop if dizziness or sharp pain appears." },
+      { focus: "Yamazaki shield chain: stance, brace, pivot, strike, reset.", drill: "Build one defensive chain and test it in slow partner rounds, then in bag fatigue rounds.", precision: "Your chain must stay calm when the opponent pressures forward.", mistake: "Trying to tank everything.", unlock: "Use the chain across striking and clinch-entry constraints.", recovery: "Rotate high-impact days away from leg strength days." }
+    ])
+  },
+  "muay-thai-runners-high": {
+    research: "PDF lineage used: Muay Thai & Hardware Tanks. Safe translation: Brekdak/Vasco pressure becomes pad work, clinch posture, roadwork, carries, and last-round output with stop rules.",
+    levels: makeLevelMap([
+      { focus: "Brekdak foundation: stance, teep, low kick, core.", drill: "3x10 push/squat/core circuit, teep 5x15/side, low-kick form 5x10/side, 20 min walk-run.", precision: "Kick lands after hip turn, not knee snap.", mistake: "Throwing hard kicks before balance exists.", unlock: "50 controlled teeps without stepping across your base.", recovery: "Shins adapt slowly; start on pads." },
+      { focus: "Shin/elbow conditioning translated into protected bag and pad rounds.", drill: "Low-kick bag 6x12, elbow pad lines 5x12, knee bag 5x20, neck isometrics 3x20 sec.", precision: "Guard returns before the next strike.", mistake: "Dropping both hands after elbows.", unlock: "Complete 5 pad rounds with clean guard recovery.", recovery: "Use shin guards and avoid bone-on-bone contact." },
+      { focus: "Hardware tank: posterior-chain strength and pressure cardio.", drill: "Sled push or incline walk 8 rounds, farmer carry 5x40 m, pull-ups/rows 5 sets, bag 5x3 min.", precision: "Pressure comes from feet and breathing, not flailing.", mistake: "Turning every session into a max-effort test.", unlock: "Keep output steady across all 5 bag rounds.", recovery: "Eat, hydrate, and sleep enough for strength blocks." },
+      { focus: "Forbidden-skill translation: legal targets, safe liver/leg entry mechanics.", drill: "Body kick pads 5x10, check-and-return 5 rounds, clinch knees 5x2 min, angle exit after every combo.", precision: "Enter behind a frame; exit before admiring the strike.", mistake: "Training illegal targets or uncontrolled elbows.", unlock: "Demonstrate 3 body-entry setups safely on pads.", recovery: "Hard knees/elbows are pad-only." },
+      { focus: "Hero mode translation: last-minute output without form collapse.", drill: "4 normal rounds + 1 final surge, hill sprints 8x12 sec, breath reset 5 min, film final round.", precision: "The final surge still has stance and guard.", mistake: "Calling panic intensity conviction.", unlock: "Increase final-round volume without losing posture.", recovery: "One lower-intensity day after surge work." },
+      { focus: "Vasco pressure chain: teep, low kick, clinch knee, exit, repeat.", drill: "Build the chain, pressure-test with pad holder movement, retest weekly under fatigue.", precision: "Forward pressure never removes defense.", mistake: "Becoming reckless because the theme is heroic.", unlock: "Run the chain for 5 rounds with consistent breathing.", recovery: "Deload after benchmark weeks." }
+    ])
+  },
+  "capoeira-evasion-kicks": {
+    research: "PDF lineage used: Invisible Attackers & Speed Demons. Safe translation: blind-spot targeting becomes footwork, vision-cone awareness, non-telegraphed entries, and controlled kick precision.",
+    levels: makeLevelMap([
+      { focus: "Plyometric base: ginga, sprint starts, hip mobility.", drill: "Ginga 12 min, 6x20 m starts, dynamic swings 3x12, target touches 5x30 sec.", precision: "Rhythm stays relaxed enough to change direction.", mistake: "Speeding up before balance is stable.", unlock: "Hold ginga rhythm for 3 rounds without tripping.", recovery: "Warm hips, ankles, wrists, and hamstrings." },
+      { focus: "Acrobatics/kick chain base: crescent, round, side, safe au progression.", drill: "Kick chamber 5x10/side, crescent 5x8/side, au wall progression 5x3, jump rope 5x2 min.", precision: "Kick recovers before the next step.", mistake: "Throwing 540/720-style work before landing mechanics.", unlock: "Land 30 kicks per side with stable recovery.", recovery: "No high kicks cold." },
+      { focus: "Blind-spot targeting: enter outside the vision cone.", drill: "Angle pad touches 8x30 sec, partner shoulder-line entries 5 rounds, exit-after-strike rule, reaction starts.", precision: "The step creates the blind spot before the strike.", mistake: "Trying to be invisible by just moving faster.", unlock: "Hit 20 angle targets without entering straight-line range.", recovery: "Keep contacts light and technical." },
+      { focus: "Speed mastery translation: remove telegraphs.", drill: "No-shoulder-shift entries, one-hand shadow rounds, 10 m start into pad touch, film review.", precision: "No shoulder lift, no hip wind-up before entry.", mistake: "Over-feinting until timing becomes obvious.", unlock: "Film 10 entries and identify zero major telegraphs.", recovery: "Speed days need low total volume." },
+      { focus: "James/Sinu logic: pain registers before the opponent reads the line.", drill: "Random pad callouts, blind-side kick-feints, late-round speed test, cooldown mobility.", precision: "Fast means early, clean, and gone.", mistake: "Chasing flashy kicks over angle selection.", unlock: "Maintain accuracy above 80% in random callout rounds.", recovery: "Protect knees/hips with strength work." },
+      { focus: "Invisible-attack chain: rhythm change, blind-side step, fast touch, exit.", drill: "Build one speed chain, test it fresh, then test it after conditioning.", precision: "The chain works because of angle and timing, not fantasy speed.", mistake: "Ignoring the exit.", unlock: "Use the chain against two different pad feeds.", recovery: "Deload when sprint speed drops." }
+    ])
+  },
+  "kali-weapon-handling": {
+    research: "PDF lineage used: Lethal Weapons/CQC. Safe translation: weapon mastery becomes foam-tool distance, grip, exit habits, and threat awareness. Real weapon situations prioritize escape.",
+    levels: makeLevelMap([
+      { focus: "Weapon familiarity: stance, grip, angle one/two.", drill: "Foam stick angles 5x20, wrist roller 3 rounds, triangle footwork 10 min, exit callouts.", precision: "Step before swing and protect the live hand.", mistake: "Standing still inside range.", unlock: "Demonstrate 6 angles with a safe exit after each.", recovery: "Forearms recover slowly; rotate grip work." },
+      { focus: "Range switch and check-hand basics.", drill: "Check-hand entries 5x2 min, retreat-entry timing 5 rounds, grip endurance carries, foam disarm slow reps.", precision: "Control distance before trying to control the object.", mistake: "Chasing the weapon instead of moving the body.", unlock: "Show 3 slow disarm simulations without yanking.", recovery: "Disarms remain low-speed and consent-based." },
+      { focus: "CQC circle translation: spatial awareness inside one step.", drill: "One-meter circle footwork, safe target-line pads, 5-point awareness calls, escape sprint x10.", precision: "Know where the exit is before entering.", mistake: "Turning drill targets into harmful vital-strike practice.", unlock: "Complete circle drills without stepping across your feet.", recovery: "Use foam tools and protective eyewear if needed." },
+      { focus: "Unconventional object defense: belt/towel/stick awareness, not real harm.", drill: "Object-control scenarios, two-on-one wrist control, escort footwork, wall-exit practice.", precision: "Hands protect centerline while feet leave danger.", mistake: "Trying to win a weapon duel.", unlock: "Choose escape route correctly in 10 scenario prompts.", recovery: "Low stress first; panic learning is bad learning." },
+      { focus: "Lethal blade translation: perfect edge awareness and distance discipline.", drill: "No-contact line drills, foam spar constraints, film footwork, wrist mobility/prehab.", precision: "The safest technique is not being reachable.", mistake: "Equating weapon training with aggression.", unlock: "Finish 5 foam rounds with clean distance management.", recovery: "No hard sparring with rigid tools." },
+      { focus: "Weapon specialist chain: read threat, angle out, control line, escape.", drill: "Build one escape-first chain and test across foam stick, towel, and empty-hand feeds.", precision: "Escape is the win condition.", mistake: "Making the chain too complex.", unlock: "Execute the same chain under three safe feeds.", recovery: "End with downregulation breathing." }
+    ])
+  },
+  "cqc-jeet-kune-do": {
+    research: "PDF lineage used: Lethal Weapons & CQC Assassins. Safe translation: Warren/Manager Kim style becomes close-range entries, interception, control, and rapid exits with padded drills.",
+    levels: makeLevelMap([
+      { focus: "Lead-hand line and intercept step.", drill: "Lead straight 5x20, step-in step-out 10 min, elbow frame pads 5x10, exit footwork.", precision: "Enter on the half-beat and leave on the next beat.", mistake: "Crowding without an angle.", unlock: "Land 40 lead-hand touches while exiting cleanly.", recovery: "Elbows and knees stay padded." },
+      { focus: "Sticky-hands feel and basic clinch break.", drill: "Chi-sao style sensitivity 5x2 min, clinch pummel 5 rounds, body-head pad chain 5x12.", precision: "Feel pressure changes through the forearm, not the ego.", mistake: "Grabbing and freezing.", unlock: "Break clinch and exit safely in 10 slow reps.", recovery: "Partner neck/shoulders stay protected." },
+      { focus: "CQC circle: strike/control inside one step.", drill: "One-step entry calls, 3-strike pad burst, wall-angle exit, breath reset after every burst.", precision: "No pause between read, entry, strike, and exit.", mistake: "Throwing too many strikes after the opening is gone.", unlock: "Complete 10 bursts with identical foot recovery.", recovery: "Burst training is short; do not grind sloppy reps." },
+      { focus: "Heart-stop fiction translated into safe chest-line pad precision.", drill: "Centerline pad targeting, shoulder-line control, knee/elbow safe line, scenario exit.", precision: "Accuracy and control matter more than force.", mistake: "Practicing harmful targets on people.", unlock: "Hit pad targets cleanly under random callouts.", recovery: "No chest strikes on partners." },
+      { focus: "New CQC: extend range without losing structure.", drill: "2-step entry, 3 m angle exit, 50-touch precision challenge, film review.", precision: "Longer range still ends with your base underneath you.", mistake: "Rushing until shoulders rise and guard drops.", unlock: "Run a 50-touch drill above 85% accuracy.", recovery: "Hands, shoulders, and neck get cooldown work." },
+      { focus: "CQC signature chain: intercept, frame, burst, exit.", drill: "Build one 4-beat close-range chain and test it with pad-holder pressure.", precision: "Compressed, clean, repeatable.", mistake: "Adding moves that do not solve the exchange.", unlock: "Use the chain fresh and tired without changing shape.", recovery: "Rotate close-range days with mobility days." }
+    ])
+  },
+  "judo-kudo-ssireum-grappling": {
+    research: "PDF lineage used: Grapplers & Cheonliang Kudo Masters. Safe translation: Mujin/Vin grip power becomes breakfalls, grip fighting, throws on mats, posterior-chain strength, and controlled Kudo transitions.",
+    levels: makeLevelMap([
+      { focus: "Cheonliang base: ukemi, grip, stance, hip position.", drill: "Breakfalls 10 min, towel hangs 4x20 sec, collar/sleeve grips 5 rounds, hip entry steps.", precision: "Break posture before trying to throw.", mistake: "Skipping breakfalls because throws look cooler.", unlock: "Perform 30 safe breakfalls and 20 grip entries.", recovery: "Mats and supervision for throwing." },
+      { focus: "Ssireum/Judo fundamentals: kuzushi, hip throws, foot sweeps.", drill: "Kuzushi 5x2 min, hip throw entries 40 reps, foot sweep timing 5 rounds, gi/towel pull-ups.", precision: "Hands guide; legs and hips do the work.", mistake: "Yanking with arms.", unlock: "Demonstrate 3 entries on both sides slowly.", recovery: "Neck and fingers need mobility after grip work." },
+      { focus: "Hell-training translation: heavy grip, back, and legs without unsafe stunts.", drill: "Farmer carry 6x40 m, deadlift or hinge 5x5, rope/towel rows, mat return entries.", precision: "Grip connects to hips before the pull.", mistake: "Trying to uproot objects or train reckless feats.", unlock: "Carry bodyweight-equivalent load safely across sets.", recovery: "Grip deload after high-volume weeks." },
+      { focus: "Kudo integration: catch strike, clinch, off-balance, safe mat return.", drill: "Strike-to-grip entries 5 rounds, trip chain 40 reps, pressure pins 5x60 sec, escape bad position.", precision: "Strike creates the grip; grip creates the throw.", mistake: "Throwing tired partners carelessly.", unlock: "Enter from a pad feed into a controlled mat return.", recovery: "No hard throws on unsafe floors." },
+      { focus: "Iron grip expert: latch, move, finish position.", drill: "Grip breaks 5 rounds, no-gi pummeling, pressure pin transitions, film one round.", precision: "Once attached, your feet keep improving the angle.", mistake: "Holding grip without moving position.", unlock: "Control a position for 60 sec while partner gives light resistance.", recovery: "Forearms and fingers need contrast/mobility." },
+      { focus: "Mujin path chain: grip, angle, uproot, control.", drill: "Build one throw/control chain and pressure-test from multiple grips.", precision: "Angle makes the bigger body feel lighter.", mistake: "Treating strength as a replacement for kuzushi.", unlock: "Apply the chain from two grips and one failed-entry recovery.", recovery: "Deload lower back and grip after benchmarks." }
+    ])
+  },
+  "copy-adaptive-mixed-martial-arts": {
+    research: "PDF lineage used: Copy Geniuses. Safe translation: visual tracking, slow copy, muscle-memory encoding, hardware base, range switching, fatigue reaction, and personal path design.",
+    levels: makeLevelMap([
+      { focus: "Awakening: baseline cardio plus visual tracking.", drill: "Walk/run 25 min, mirror jab-cross 5x2 min, pendulum eye tracking 5 min, mobility 10 min.", precision: "Copy posture first, then speed.", mistake: "Copying a highlight without the stance underneath.", unlock: "Reproduce one basic combo slowly from video with stable balance.", recovery: "Eyes and joints get breaks." },
+      { focus: "Software expansion: encode one move at a time.", drill: "100 slow reps per chosen move, 20 min flexibility, watch-copy-repeat notes, stance reset after every rep.", precision: "Name what the move solves before repeating it.", mistake: "Collecting techniques without a base.", unlock: "Use one copied move correctly in a one-rule drill.", recovery: "Stop if flexibility work causes joint pain." },
+      { focus: "Hardware forging: strength and mobility to support copied movements.", drill: "Full-body strength 4x8, roadwork 30 min, range switch drills, defensive shell under fatigue.", precision: "Your body must earn the movement before intensity.", mistake: "Overloading joints to mimic impossible fiction.", unlock: "Keep form while switching from strike to sprawl to stand-up.", recovery: "Progress strength weekly, not daily." },
+      { focus: "First Gen mimicry: copy principles, not just shapes.", drill: "Study one fighter style, mimic for 3 slow rounds, counter your own combo, blindfolded footwork only.", precision: "Copy the reason behind the technique.", mistake: "Changing identity every round.", unlock: "Explain the principle behind one copied chain.", recovery: "Blindfold work is footwork-only and supervised." },
+      { focus: "UI translation: automatic reactions after controlled fatigue.", drill: "Light exhaustion block, random pad defense 10x30 sec, breath reset, film reaction delay.", precision: "The body chooses simple answers under pressure.", mistake: "Trying to force unconsciousness.", unlock: "React correctly to 20 random cues after conditioning.", recovery: "No near-death or unsafe exhaustion methods." },
+      { focus: "Infinite convergence: copied library becomes personal path.", drill: "Build one signature chain from two copied sources and one body-specific strength.", precision: "The chain should fit your limbs, lungs, and strongest attribute.", mistake: "Remaining only a library.", unlock: "Use your chain under two constraints and one fatigue test.", recovery: "Deload after path tests." }
+    ])
   }
 };
 
@@ -1606,6 +1886,7 @@ const MASTERY_PROGRAMS = Object.fromEntries(MASTERIES_V2.map((mastery) => [maste
   ],
   safety: "Progressive overload, clean technique, and recovery decide the result. Fictional mastery is only the motivational frame.",
   physique: `${mastery.label} physique goal: ${mastery.achieve}`,
+  levels: makeMasteryLevels(mastery),
   sourceLinks: [["Lookism Mastery", WIKI_MASTERY_URL], ["CDC Activity", CDC_ACTIVITY_URL]]
 }]));
 
@@ -3284,12 +3565,71 @@ function selectedFighterType() {
 }
 
 function techniqueProgramFor(art) {
-  return MARTIAL_ART_TECHNIQUE_PROGRAMS[artId(art)] || {
+  const id = artId(art);
+  const baseProgram = MARTIAL_ART_TECHNIQUE_PROGRAMS[id] || {
     core: [art.beginner, art.intermediate, art.advanced, art.mastery],
     precision: ["Move slowly before adding speed", "Keep balance after every rep", "Stop when form breaks"],
     mistakes: ["Skipping basics", "Training intensity before accuracy", "Ignoring recovery"],
     safety: "Progress gradually and use a qualified coach for contact or partner work."
   };
+  const research = ART_RESEARCH_GUIDES[id] || {};
+  return {
+    ...baseProgram,
+    ...research,
+    core: research.core || baseProgram.core,
+    precision: research.precision || baseProgram.precision,
+    mistakes: research.mistakes || baseProgram.mistakes,
+    safety: research.safety || baseProgram.safety,
+    levels: research.levels || baseProgram.levels
+  };
+}
+
+function levelIndex(level) {
+  return Math.max(0, TECHNIQUE_LEVELS.findIndex((item) => item.id === level.id));
+}
+
+function levelBlueprint(level) {
+  return LEVEL_DETAIL_BLUEPRINTS[level.id] || LEVEL_DETAIL_BLUEPRINTS.beginner;
+}
+
+function levelArrayValue(items, index, fallback = "") {
+  if (!Array.isArray(items) || !items.length) return fallback;
+  return items[index] || items[items.length - 1] || fallback;
+}
+
+function drillBlockFor(context, focus, program, level) {
+  const blueprint = levelBlueprint(level);
+  const core = Array.isArray(program.core) && program.core.length ? program.core.slice(0, 3).join(" · ") : focus;
+  return `${blueprint.dose} Drill block: ${focus}. Anchor reps: ${core}. Finish by writing one technical correction.`;
+}
+
+function programLevelDetail(context, program, level, fallbacks = {}) {
+  const index = levelIndex(level);
+  const override = program.levels?.[level.id] || {};
+  const blueprint = levelBlueprint(level);
+  const focus = override.focus || levelArrayValue(program.core, index, fallbacks.focus || context);
+  const precision = override.precision || levelArrayValue(program.precision, index, fallbacks.precision || "Move slowly before adding speed.");
+  const mistake = override.mistake || levelArrayValue(program.mistakes, index, fallbacks.mistake || "Skipping the foundation.");
+  return {
+    focus,
+    schedule: override.schedule || `${level.schedule}. ${blueprint.dose} ${blueprint.load}`,
+    drill: override.drill || drillBlockFor(context, focus, program, level),
+    precision,
+    mistake,
+    unlock: override.unlock || `${unlockTestFor(context, level)} ${blueprint.unlock}`,
+    recovery: override.recovery || `${blueprint.recovery} ${program.safety || "Progress gradually and stay pain-free."}`
+  };
+}
+
+function makeMasteryLevels(mastery) {
+  return makeLevelMap([
+    { focus: `${mastery.label} foundation: posture, breathing, and one base movement.`, drill: `Warm-up 8 min, practice ${mastery.label.toLowerCase()} mechanics 4x8, finish with easy conditioning.`, precision: "Stop while form is still clean.", mistake: "Trying to act like a top-tier fighter before building joints and breath.", recovery: "One rest day after any hard strength or impact work." },
+    { focus: `${mastery.label} base mechanics: repeat the same clean pattern until it is measurable.`, drill: `Main drill 5x5 or 5x2 min, accessory weakness work, 10 min cooldown notes.`, precision: "Log load, speed, or round quality every time.", mistake: "Adding variety because basics feel boring.", recovery: "Increase weekly volume by small steps only." },
+    { focus: `${mastery.label} under fatigue: keep the skill when lungs and grip get tired.`, drill: "Skill block, conditioning block, repeat the skill once more while tired, then film one set.", precision: "The tired rep must resemble the fresh rep.", mistake: "Letting fatigue become an excuse for ugly movement.", recovery: "Deload every fourth week." },
+    { focus: `${mastery.label} under constraints: one rule, one weakness, one repeatable answer.`, drill: "Constraint rounds, benchmark set, film review, and one corrective drill.", precision: "Solve the exchange with fewer movements.", mistake: "Testing max intensity before owning the constraint.", recovery: "Hard constraint days need easier sessions around them." },
+    { focus: `${mastery.label} expert block: combine benchmark, film, and pressure testing.`, drill: "One benchmark, one technique pressure round, one recovery block, one written correction.", precision: "A strong result counts only if it can be repeated.", mistake: "Chasing PRs while sleep, pain, or technique is failing.", recovery: "One low-intensity mobility day is mandatory." },
+    { focus: `${mastery.label} mastery chain: turn your best attribute into an identity.`, drill: "Build one chain, test it fresh, test it tired, then retest after a deload.", precision: "The chain should fit your body and reason for training.", mistake: "Calling a copied chain your path before it survives pressure.", recovery: "Wave training: build, test, deload, refine." }
+  ]);
 }
 
 function youtubeSearchUrl(query) {
@@ -4678,6 +5018,12 @@ function renderLearningLibrary() {
   const rows = [
     ["Lookism Sources", RESOURCE_LIBRARY.lookism],
     ["System / Safety Sources", RESOURCE_LIBRARY.system],
+    ["PDF Research Translation Pack", [
+      ["Copy/UI safe progression", youtubeSearchUrl("visual reaction drills martial arts copy technique beginner")],
+      ["Iron Boxing progression", youtubeSearchUrl("boxing slip line counter punching beginner iron body conditioning safe")],
+      ["Kyokushin conditioning safe", youtubeSearchUrl("kyokushin karate beginner conditioning makiwara pad safety")],
+      ["CQC close range basics", youtubeSearchUrl("jeet kune do cqc close range entry drill beginner safe")]
+    ]],
     ["YouTube Tutorial Searches", [
       ["Beginner boxing footwork", youtubeSearchUrl("beginner boxing footwork tutorial guard jab cross")],
       ["Kyokushin basics", youtubeSearchUrl("kyokushin karate beginner basics stance low kick")],
@@ -4781,6 +5127,13 @@ function renderMartialArtDetail(art) {
         </div>
       </header>
 
+      ${program.research ? `
+        <article class="system-panel quote-card" style="--accent:${art.color}">
+          <div class="section-label">PDF Research Translation</div>
+          <p>${escapeHtml(program.research)}</p>
+        </article>
+      ` : ""}
+
       <div class="technique-layout">
         <article class="system-panel technique-core" style="--accent:${art.color}">
           <div class="section-label">Core Technique Tree</div>
@@ -4825,8 +5178,7 @@ function renderTechniqueLevel(art, program, level) {
     expert: `${art.advanced} Add film review, partner timing, and pressure-tested exits.`,
     "technique-mastery": art.mastery
   }[level.id];
-  const coreIndex = TECHNIQUE_LEVELS.findIndex((item) => item.id === level.id);
-  const technique = program.core[coreIndex] || program.core[program.core.length - 1];
+  const detail = programLevelDetail(art.art, program, level, { focus: levelText, precision: levelText });
   return `
     <article class="technique-stage" style="--accent:${art.color}">
       <div class="technique-stage-head">
@@ -4837,19 +5189,31 @@ function renderTechniqueLevel(art, program, level) {
       <div class="technique-stage-body">
         <section>
           <h3>Focus Technique</h3>
-          <p>${escapeHtml(technique)}</p>
+          <p>${escapeHtml(detail.focus)}</p>
         </section>
         <section>
           <h3>Weekly Schedule</h3>
-          <p>${escapeHtml(level.schedule)}</p>
+          <p>${escapeHtml(detail.schedule)}</p>
         </section>
         <section>
-          <h3>Precision Assignment</h3>
-          <p>${escapeHtml(levelText)}</p>
+          <h3>Drill Block</h3>
+          <p>${escapeHtml(detail.drill)}</p>
+        </section>
+        <section>
+          <h3>Precision Cue</h3>
+          <p>${escapeHtml(detail.precision)}</p>
+        </section>
+        <section>
+          <h3>Common Mistake</h3>
+          <p>${escapeHtml(detail.mistake)}</p>
         </section>
         <section>
           <h3>Unlock Test</h3>
-          <p>${escapeHtml(unlockTestFor(art.art, level))}</p>
+          <p>${escapeHtml(detail.unlock)}</p>
+        </section>
+        <section>
+          <h3>Recovery / Safety</h3>
+          <p>${escapeHtml(detail.recovery)}</p>
         </section>
       </div>
       ${renderResourceChips(art.art, level.label, art.sources)}
@@ -4932,6 +5296,12 @@ function renderFighterTypeDetail(type) {
           <small>full clear</small>
         </div>
       </header>
+      ${program.research ? `
+        <article class="system-panel quote-card" style="--accent:${type.color}">
+          <div class="section-label">PDF Research Translation</div>
+          <p>${escapeHtml(program.research)}</p>
+        </article>
+      ` : ""}
       <div class="technique-layout">
         <article class="system-panel technique-core" style="--accent:${type.color}">
           <div class="section-label">Archetype Skill Tree</div>
@@ -4960,10 +5330,7 @@ function renderFighterTypeDetail(type) {
 }
 
 function renderFamilyProgramLevel(type, id, context, color, program, level, sources, stat = "technique", complete = false) {
-  const index = TECHNIQUE_LEVELS.findIndex((item) => item.id === level.id);
-  const focus = program.core[index] || program.core[program.core.length - 1];
-  const precision = program.precision[index % program.precision.length];
-  const mistake = program.mistakes[index % program.mistakes.length];
+  const detail = programLevelDetail(context, program, level);
   return `
     <article class="technique-stage" style="--accent:${color}">
       <div class="technique-stage-head">
@@ -4974,23 +5341,31 @@ function renderFamilyProgramLevel(type, id, context, color, program, level, sour
       <div class="technique-stage-body">
         <section>
           <h3>Focus</h3>
-          <p>${escapeHtml(focus)}</p>
+          <p>${escapeHtml(detail.focus)}</p>
         </section>
         <section>
           <h3>Weekly Schedule</h3>
-          <p>${escapeHtml(level.schedule)}</p>
+          <p>${escapeHtml(detail.schedule)}</p>
+        </section>
+        <section>
+          <h3>Drill Block</h3>
+          <p>${escapeHtml(detail.drill)}</p>
         </section>
         <section>
           <h3>Precision Cue</h3>
-          <p>${escapeHtml(precision)}</p>
+          <p>${escapeHtml(detail.precision)}</p>
         </section>
         <section>
           <h3>Unlock Test</h3>
-          <p>${escapeHtml(unlockTestFor(context, level))}</p>
+          <p>${escapeHtml(detail.unlock)}</p>
         </section>
         <section>
           <h3>Common Mistake</h3>
-          <p>${escapeHtml(mistake)}</p>
+          <p>${escapeHtml(detail.mistake)}</p>
+        </section>
+        <section>
+          <h3>Recovery / Safety</h3>
+          <p>${escapeHtml(detail.recovery)}</p>
         </section>
       </div>
       ${renderResourceChips(context, level.label, sources)}
