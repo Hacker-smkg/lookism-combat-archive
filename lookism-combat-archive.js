@@ -1438,9 +1438,172 @@ const EXTENDED_FIGHTER_DATABASE = [
 
 const CANON_ROSTER_DATABASE = [...PDF_FIGHTER_DATABASE, ...EXTENDED_FIGHTER_DATABASE];
 
+const PTJ_POWER_TIERS = [
+  {
+    min: 97,
+    label: "MYTHIC PINNACLE",
+    color: "#f8f4ff",
+    desc: "Era-ending monsters: perfect body/UI, Great Power tier, peak legends, or fighters who define the ceiling."
+  },
+  {
+    min: 93,
+    label: "TRANSCENDENT LEGEND",
+    color: "#a674ff",
+    desc: "Top legends and near-ceiling fighters with multiple thresholds, Path, UI, or cross-generation dominance."
+  },
+  {
+    min: 88,
+    label: "LEGENDARY MASTER",
+    color: "#ef3d3d",
+    desc: "High legend class: prime masters, military legends, king breakers, and fighters with elite mastery density."
+  },
+  {
+    min: 82,
+    label: "KING / HIGH MASTERY",
+    color: "#f2bd48",
+    desc: "King-class fighters, major heirs, and mastery specialists who can decide arcs by themselves."
+  },
+  {
+    min: 76,
+    label: "CREW-HEAD APEX",
+    color: "#4ea5ff",
+    desc: "Elite second-generation, Workers executives, and specialist threats with one clear top-class weapon."
+  },
+  {
+    min: 70,
+    label: "EXECUTIVE SPECIALIST",
+    color: "#4dd678",
+    desc: "Dangerous named fighters with a defined combat lane, but below king-level consistency."
+  },
+  {
+    min: 0,
+    label: "REGIONAL THREAT",
+    color: "#9aa0aa",
+    desc: "Solid named combatants and local threats who still need stronger feats, masteries, or hardware."
+  }
+];
+
+const PTJ_POWER_SCORE_OVERRIDES = {
+  "UI Big Daniel": 100,
+  "Gapryong Kim": 99.4,
+  "Yamazaki Head": 99,
+  "James Lee": 98.5,
+  "Gitae Kim": 97.9,
+  "Gun Park": 97.4,
+  "Goo Kim": 96.8,
+  "Tom Lee": 96.3,
+  "Jinyoung Park": 95.4,
+  "Mujin Jin": 94.9,
+  "Seongji Yuk": 94,
+  "Charles Choi": 93.5,
+  "Shintaro Yamazaki": 93.2,
+  "Shingen Yamazaki": 92.7,
+  "Baekho Kwon": 91.8,
+  "Manager Kim": 91.2,
+  "Samdak": 90.8,
+  "Hansu Seong": 90.3,
+  "Changsu Oh": 89.6,
+  "Brekdak": 89,
+  "Lang Jin": 88.9,
+  "Lang Jin (Jinrang)": 88.9,
+  "Jichang Kwak": 88.5,
+  "OG Daniel Park": 87.8,
+  "Johan Seong": 87.3,
+  "Jaegyeon Na": 86.8,
+  "Taesoo Ma": 86.2,
+  "Gongseob Ji": 85.7,
+  "Jake Kim": 85.2,
+  "Paecheon Jo": 84.7,
+  "Yujae Seon": 84,
+  "Seokdu Wang": 83.2,
+  "Sinu Han": 83,
+  "Zack Lee": 82.6,
+  "Vasco": 82.2,
+  "Eli Jang": 81.8,
+  "Samuel Seo": 81.3,
+  "Ryuhei Kuroda": 80.9,
+  "Bongae Choi": 80.5,
+  "Bakgu Noh": 80,
+  "Mandeok Bang": 79.6,
+  "Yuseong": 79.2,
+  "Sophia": 78.9,
+  "Warren Chae": 78.5,
+  "Jerry Kwon": 78,
+  "Jay Hong": 77.6,
+  "Hudson Ahn": 77.2,
+  "Vin Jin": 76.8,
+  "Taejin Cheon": 76.4,
+  "Xiaolong": 76,
+  "Jihan Kwak": 75.5,
+  "Jibeom Kwak": 75,
+  "Kwak Chung-ho": 74.6,
+  "Yugang Ha": 74.2,
+  "Baekjin Hyeon": 73.8,
+  "Jeongseok Hwang": 73.4,
+  "Lineman": 73,
+  "Logan Lee": 72.6,
+  "Kenta Magami": 72.2,
+  "Olly Wang": 71.8,
+  "Hangyeol Baek": 71.4,
+  "Jaeha Kim": 71,
+  "Kazuma": 69.8
+};
+
+function ptjTierFor(score) {
+  return PTJ_POWER_TIERS.find((tier) => score >= tier.min) || PTJ_POWER_TIERS[PTJ_POWER_TIERS.length - 1];
+}
+
+function computedPowerScore(entry) {
+  const sourceBase = Math.max(66, 101 - (entry.rank * 0.48));
+  const tags = entry.masteryTags || [];
+  const masteryBonus = tags.reduce((total, tag) => {
+    if (tag === "path" || tag === "ui") return total + 2.8;
+    if (tag === "copy" || tag === "weapon") return total + 1.9;
+    return total + 1.25;
+  }, 0);
+  const archetypeBonus = ["ui-copy", "speed-legend", "wild-wall", "king-strength"].includes(entry.archetypeKey) ? 1.4 : 0;
+  return clamp(sourceBase + masteryBonus + archetypeBonus, 58, 100);
+}
+
+function ptjScalingFactors(entry) {
+  const factors = [];
+  const tags = entry.masteryTags || [];
+  if (entry.rank <= 10) factors.push("top source portrayal");
+  if (/Gapryong|Yamazaki|Mujin|Tom|Jinyoung|Baekho|Bakgu|Bongae/.test(`${entry.name} ${entry.aliases?.join(" ") || ""}`)) factors.push("pre-generation scaling");
+  if (/King|First Gen|Seoul|Ansan|Daegu|Cheonliang|Incheon|Chungcheong/.test(`${entry.tier || ""} ${entry.combatPath || ""}`)) factors.push("king / generation scaling");
+  if (tags.includes("ui")) factors.push("Ultra Instinct factor");
+  if (tags.includes("path")) factors.push("Path factor");
+  if (tags.includes("copy")) factors.push("copy ceiling");
+  if (tags.includes("weapon")) factors.push("weapon lethality");
+  if (tags.includes("conviction")) factors.push("overcome / conviction");
+  if (tags.includes("speed")) factors.push("speed threshold");
+  if (tags.includes("strength")) factors.push("strength threshold");
+  if (tags.includes("endurance")) factors.push("durability threshold");
+  if (tags.includes("technique")) factors.push("technique threshold");
+  return factors.slice(0, 6);
+}
+
+function ptjScalingNote(entry, score, tier, factors) {
+  const factorText = factors.length ? factors.slice(0, 3).join(", ") : "overall feats";
+  return `${entry.name} is scaled as ${tier.label} at ${score.toFixed(1)} by weighting ${factorText}, source portrayal, mastery density, and cross-PTJ combat role.`;
+}
+
+function ptjPowerFor(entry) {
+  const score = PTJ_POWER_SCORE_OVERRIDES[entry.name] ?? computedPowerScore(entry);
+  const tier = ptjTierFor(score);
+  const factors = ptjScalingFactors(entry);
+  return {
+    score,
+    tier,
+    factors,
+    note: ptjScalingNote(entry, score, tier, factors)
+  };
+}
+
 const roster = CANON_ROSTER_DATABASE.map((entry) => {
   const archetype = ARCHETYPES[entry.archetypeKey] || ARCHETYPES.crew;
   const masteries = entry.masteryTags;
+  const power = ptjPowerFor(entry);
   const accent = masteries.includes("speed")
     ? MASTERY_META.speed.color
     : masteries.includes("strength")
@@ -1457,11 +1620,18 @@ const roster = CANON_ROSTER_DATABASE.map((entry) => {
   return {
     id: `${entry.rank}-${slug(entry.name)}-${slug(alias)}`,
     rank: entry.rank,
+    sourceRank: entry.rank,
     name: entry.name,
     alias,
     aliases: entry.aliases,
     faction: entry.faction,
     tier,
+    powerScore: power.score,
+    powerTier: power.tier.label,
+    powerTierColor: power.tier.color,
+    powerTierDesc: power.tier.desc,
+    powerFactors: power.factors,
+    scalingNote: power.note,
     archetypeKey: entry.archetypeKey,
     archetype: archetype.label,
     style: archetype.style,
@@ -1487,10 +1657,14 @@ const roster = CANON_ROSTER_DATABASE.map((entry) => {
       entry.uniqueSkill,
       entry.masteriesAchieved,
       entry.combatPath,
+      power.tier.label,
+      power.factors.join(" "),
+      `ptj ${power.score.toFixed(1)}`,
       masteries.join(" ")
     ].join(" ").toLowerCase()
   };
-});
+}).sort((a, b) => b.powerScore - a.powerScore || a.sourceRank - b.sourceRank)
+  .map((fighter, index) => ({ ...fighter, powerRank: index + 1 }));
 
 const vault = [
   ["Daniel dual-body reference", "Character picture", "danielDual", "Two-body identity is the core visual idea for Daniel. Use it as the hero reference for body transformation, copy growth, and UI potential."],
@@ -5523,7 +5697,7 @@ function renderMiniFighter(fighter) {
     <button type="button" class="mini-fighter" data-open-fighter="${fighter.id}" style="--accent:${fighter.accent}">
       ${renderCharacterImage(fighter, "mini")}
       <span class="mini-fighter-copy">
-        <span class="tiny">#${String(fighter.rank).padStart(2, "0")} · ${escapeHtml(fighter.tier)}</span>
+        <span class="tiny">PTJ #${String(fighter.powerRank).padStart(2, "0")} · ${escapeHtml(fighter.powerTier)}</span>
         <h3>${escapeHtml(fighter.name)}</h3>
         <small>${escapeHtml(fighter.alias)}</small>
       </span>
@@ -5550,7 +5724,7 @@ function renderFighters() {
         <div>
           <div class="eyebrow">PTJ UNIVERSE TIER LIST</div>
           <h1 class="page-title">Top Fighters</h1>
-          <p class="page-subtitle">최강 파이터 · CANON-SOURCED · ${roster.length} ROSTER</p>
+          <p class="page-subtitle">최강 파이터 · PTJ-SCALED · MYTHIC / MASTERY / PATH · ${roster.length} ROSTER</p>
         </div>
         <div class="roster-count"><strong>${visible.length}</strong><span>shown</span></div>
       </div>
@@ -5567,7 +5741,7 @@ function filteredRoster() {
   if (!query) return roster;
   return roster
     .filter((fighter) => fighter.searchText.includes(query))
-    .sort((a, b) => searchRank(a, query) - searchRank(b, query) || a.rank - b.rank);
+    .sort((a, b) => searchRank(a, query) - searchRank(b, query) || a.powerRank - b.powerRank);
 }
 
 function searchRank(fighter, query) {
@@ -5584,9 +5758,9 @@ function renderFighterRow(fighter) {
     <button type="button" class="fighter-row" data-open-fighter="${fighter.id}" style="--accent:${fighter.accent}">
       ${renderCharacterImage(fighter, "card")}
       <span>
-        <span class="tiny">#${String(fighter.rank).padStart(3, "0")} · ${escapeHtml(fighter.tier)}</span>
+        <span class="tiny">PTJ #${String(fighter.powerRank).padStart(3, "0")} · ${escapeHtml(fighter.powerTier)} · ${fighter.powerScore.toFixed(1)}</span>
         <h2>${escapeHtml(fighter.name)}</h2>
-        <span class="ko-small">${escapeHtml(fighterDeep(fighter).ko || fighter.alias)}</span>
+        <span class="ko-small">${escapeHtml(fighterDeep(fighter).ko || fighter.alias)} · Source #${String(fighter.sourceRank).padStart(2, "0")} · ${escapeHtml(fighter.tier)}</span>
         <span class="fighter-record-line">${escapeHtml(fighter.combatPath)}</span>
         <p>${escapeHtml(fighter.analysis)}</p>
         <span class="fighter-tech-line">${escapeHtml(fighter.primaryTechniques)} · ${escapeHtml(fighter.uniqueSkill)}</span>
@@ -5604,7 +5778,7 @@ function renderFighterDetail(fighter) {
       <button type="button" class="back-btn" data-view="fighters">← Fighters</button>
       <header class="fighter-hero">
         <div class="fighter-hero-copy">
-          <div class="eyebrow">${escapeHtml(fighter.tier)} · Rank #${fighter.rank}</div>
+          <div class="eyebrow">PTJ Power #${fighter.powerRank} · ${escapeHtml(fighter.powerTier)} · Source #${fighter.sourceRank}</div>
           <h1>${escapeHtml(fighter.name)}</h1>
           <span class="ko-small">${escapeHtml(deep.ko || fighter.alias)}</span>
           <p>${escapeHtml(fighter.analysis)}</p>
@@ -5622,6 +5796,7 @@ function renderFighterDetail(fighter) {
       </article>
 
       <div class="detail-stack">
+        ${renderPtjPowerScale(fighter)}
         ${renderPdfCombatRecord(fighter)}
         ${renderEvolutionTimeline(fighter)}
         ${detailBlock("Fighter Profile", fighter.analysis)}
@@ -5643,6 +5818,44 @@ function renderFighterDetail(fighter) {
         </article>
       </div>
     </section>
+  `;
+}
+
+function renderPtjPowerScale(fighter) {
+  const factors = fighter.powerFactors.length ? fighter.powerFactors : ["source portrayal", "combat role", "mastery profile"];
+  return `
+    <article class="system-panel ptj-power-card" style="--accent:${fighter.powerTierColor}">
+      <div class="section-top compact">
+        <div>
+          <div class="section-label">PTJ Mythic Power Scale</div>
+          <h2>#${fighter.powerRank} · ${escapeHtml(fighter.powerTier)}</h2>
+          <p>${escapeHtml(fighter.scalingNote)}</p>
+        </div>
+        <span class="count">${fighter.powerScore.toFixed(1)}</span>
+      </div>
+      <div class="journey-grid">
+        <div>
+          <span>Power Rank</span>
+          <strong>#${fighter.powerRank}</strong>
+        </div>
+        <div>
+          <span>Source Rank</span>
+          <strong>#${fighter.sourceRank}</strong>
+        </div>
+        <div>
+          <span>Mythic Tier</span>
+          <strong>${escapeHtml(fighter.powerTier)}</strong>
+        </div>
+        <div>
+          <span>Archetype</span>
+          <strong>${escapeHtml(fighter.archetype)}</strong>
+        </div>
+      </div>
+      <div class="chip-list">
+        ${factors.map((factor) => `<span class="chip">${escapeHtml(factor)}</span>`).join("")}
+      </div>
+      <p class="ptj-scale-note">${escapeHtml(fighter.powerTierDesc)} This is a fan scaling model, not an official immutable PTJ statement.</p>
+    </article>
   `;
 }
 

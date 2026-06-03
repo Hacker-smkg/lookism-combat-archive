@@ -1348,6 +1348,7 @@ img {
   text-transform: uppercase;
 }
 
+.ptj-power-card,
 .combat-record-card,
 .evolution-card,
 .fighter-training-card {
@@ -1357,6 +1358,18 @@ img {
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 52%),
     rgba(255, 255, 255, 0.018);
+}
+
+.ptj-power-card .count {
+  color: var(--accent);
+  font-size: clamp(2.4rem, 5vw, 4.6rem);
+  letter-spacing: 0.08em;
+}
+
+.ptj-scale-note {
+  margin: 16px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 .combat-record-grid {
@@ -3431,6 +3444,7 @@ img {
   .wiki-card,
   .source-card,
   .routine-card,
+  .ptj-power-card,
   .combat-record-card,
   .evolution-card,
   .fighter-training-card {
