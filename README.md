@@ -9,8 +9,9 @@ Live app: https://lookism-vercel.vercel.app
 ## What This App Is
 
 Lookism Combat Archive is a dark neon "System" web app that combines a fighter
-archive, visual vault, training library, XP dashboard, profile diagnosis, cloud
-save, and Gemini-powered coaching assistant.
+archive, PTJ mythic power-scaling board, visual vault, training library, XP
+dashboard, profile diagnosis, cloud save, and Gemini-powered coaching
+assistant.
 
 The core fantasy is simple: start like weak Daniel Park, then level up through
 safe real-world training quests, martial-art practice, stat growth, mastery
@@ -26,6 +27,9 @@ The app uses Lookism-inspired concepts such as:
   grappling, weapon handling, and conviction-based growth
 - Top Lookism fighters, masteries, fighting styles, physiques, and training
   themes
+- PTJ-inspired mythic power ranking using portrayal, masteries, Path, Ultra
+  Instinct, copy potential, weapon lethality, generation scaling, and combat
+  role
 
 These are used as fictional motivation and structured fitness themes. The app
 does not claim that manhwa powers are real.
@@ -50,8 +54,20 @@ technique, martial skill, recovery, consistency, and personal growth.
   `lookism-assets/backgrounds`.
 - Real cached fighter images from `lookism-assets/characters`; no stickman or
   generated placeholder overlays.
-- Top-50 fighter roster with search, tier details, fighting styles, masteries,
-  physique notes, and Lookism-inspired training notes.
+- Fighter images load eagerly and use lighter overlays so newly added and lower
+  roster characters stay visible on desktop and mobile.
+- 62-fighter roster with search, source rank, PTJ power rank, mythic tier,
+  fighting styles, masteries, physique notes, and Lookism-inspired training
+  notes.
+- PTJ Mythic Power Scale with tiers such as `MYTHIC PINNACLE`,
+  `TRANSCENDENT LEGEND`, `LEGENDARY MASTER`, `KING / HIGH MASTERY`,
+  `CREW-HEAD APEX`, and `EXECUTIVE SPECIALIST`.
+- Fighter detail pages show a power-scaling card with score, source rank,
+  archetype, scaling factors, combat record, evolution path, and linked
+  training routes.
+- Restored extended archive fighters: Sophia, Xiaolong, Olly Wang, Baekho Kwon,
+  Hansu Seong, Brekdak, Shintaro Yamazaki, Jaeha Kim, Seokdu Wang, Hangyeol
+  Baek, Bongae Choi, and Bakgu Noh.
 - Visual Vault for character, source, mode, mastery, and path references.
 - Vault filters for `All`, `UI`, `Mastery`, `Path`, `Brutal Fights`, `Kings`,
   and `Pre-Gen`.
@@ -108,6 +124,42 @@ technique, martial skill, recovery, consistency, and personal growth.
 - Account tools for sync, restore cloud save, export data, clear local save, and
   delete app data.
 - Local browser storage fallback so the app works without login.
+
+## Fighter Roster + PTJ Mythic Ranking
+
+The roster is no longer limited to only a Top 50 list. The current build uses a
+62-fighter archive that keeps the PDF/source rank while adding a separate PTJ
+power rank.
+
+The PTJ rank is a fan scaling model, not an official immutable PTJ statement.
+It weighs:
+
+- Narrative portrayal and source rank
+- Mastery or threshold density
+- Path, Ultra Instinct, copy talent, and personal combat identity
+- Pre-Generation, First Generation, king, crew-head, and executive scaling
+- Weapon lethality, military/CQC skill, durability, speed, and conviction
+- Cross-PTJ character context from Lookism, Manager Kim, Viral Hit, Questism,
+  and related PTJ universe combat lanes
+
+Each fighter card shows:
+
+- PTJ power rank
+- Mythic tier
+- Power score
+- Source rank
+- Combat path
+- Primary techniques
+- Mastery tags
+
+Each fighter detail page includes:
+
+- PTJ Mythic Power Scale card
+- PDF/source combat record
+- 5-stage evolution path
+- Fighter profile, unique skill, style, physique, and training method
+- Linked training routes for matching martial arts, mastery fields, and fighter
+  types
 
 ## Training Library
 
@@ -271,7 +323,7 @@ Do not paste production keys into browser code or public chat. See
 This project is deployed on Vercel.
 
 ```bash
-rtk vercel deploy --prod --yes
+rtk npm exec vercel -- --prod --yes
 ```
 
 Production URL:
