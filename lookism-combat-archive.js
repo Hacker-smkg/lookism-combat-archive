@@ -1253,22 +1253,192 @@ const PDF_FIGHTER_DATABASE = [
   }
 ];
 
-const EXTENDED_ARCHIVE_BACKLOG = [
-  "Sophia",
-  "Xiaolong",
-  "Olly Wang",
-  "Baekho Kwon",
-  "Hansu Seong",
-  "Brekdak",
-  "Shintaro Yamazaki",
-  "Jaeha Kim",
-  "Seokdu Wang",
-  "Hangyeol Baek",
-  "Bongae Choi",
-  "Bakgu Noh"
+const EXTENDED_FIGHTER_DATABASE = [
+  {
+    rank: 51,
+    tier: "Extended Archive · Grappler",
+    name: "Sophia",
+    aliases: ["Sophia Alexander", "Jay's Teacher", "Security Bodyguard"],
+    faction: "Hong Family / Security",
+    archetypeKey: "grappler",
+    imageKey: "sophia",
+    primaryTechniques: "Systema / Kali Arnis / Grappling",
+    uniqueSkill: "Bodyguard Control",
+    masteriesAchieved: "Weapon, Technique, Grappling Control",
+    combatPath: "Security Combat Path",
+    masteryTags: ["weapon", "technique", "strength", "endurance"],
+    evolution: { vb: "Security trainee", b: "Systema base", i: "Kali-Arnis weapon control", a: "Elite bodyguard", e: "Bodyguard control specialist" }
+  },
+  {
+    rank: 52,
+    tier: "Extended Archive · Weapon",
+    name: "Xiaolong",
+    aliases: ["Vivi's Guard", "Guandao User", "Workers Guard"],
+    faction: "Workers / Vivi",
+    archetypeKey: "weapon",
+    imageKey: "xiaolong",
+    primaryTechniques: "Chinese Martial Arts / Guandao / Staff",
+    uniqueSkill: "Long-Weapon Guard",
+    masteriesAchieved: "Weapon Mastery, Technique, Endurance",
+    combatPath: "Loyal Guard Path",
+    masteryTags: ["weapon", "technique", "endurance"],
+    evolution: { vb: "Guard trainee", b: "Staff footwork", i: "Guandao range control", a: "Workers guardian", e: "Long-weapon specialist" }
+  },
+  {
+    rank: 53,
+    tier: "Extended Archive · Conviction",
+    name: "Olly Wang",
+    aliases: ["Hostel A", "Pain Nullification", "Runaway Leader"],
+    faction: "Hostel",
+    archetypeKey: "conviction-brawler",
+    imageKey: "olly",
+    primaryTechniques: "Aikido / Street Brawling / Pain Tolerance",
+    uniqueSkill: "Pain Nullification",
+    masteriesAchieved: "Conviction, Endurance, Wildness",
+    combatPath: "Hostel Tragedy Path",
+    masteryTags: ["conviction", "endurance", "technique"],
+    evolution: { vb: "Runaway kid", b: "Hostel imitation", i: "Pain tolerance brawler", a: "Hostel A head", e: "Tragic conviction fighter" }
+  },
+  {
+    rank: 54,
+    tier: "Extended Archive · Wild Wall",
+    name: "Baekho Kwon",
+    aliases: ["Gapryong's Shield", "Kwon Baekho", "Fist Gang Shield"],
+    faction: "Gapryong Fist",
+    archetypeKey: "wild-wall",
+    imageKey: "baekho",
+    primaryTechniques: "Shield Brawling / Power Guard",
+    uniqueSkill: "Gapryong's Shield",
+    masteriesAchieved: "Strength, Endurance, Conviction",
+    combatPath: "Shield of Protection",
+    masteryTags: ["strength", "endurance", "conviction"],
+    evolution: { vb: "Street protector", b: "Fist Gang muscle", i: "Gapryong's guard", a: "Shield enforcer", e: "Legendary shield" }
+  },
+  {
+    rank: 55,
+    tier: "Extended Archive · Technical Striker",
+    name: "Hansu Seong",
+    aliases: ["Taehoon Seong's Father", "Taekwondo Master", "Manager Kim Verse"],
+    faction: "Military / Seong Family",
+    archetypeKey: "striker",
+    imageKey: "hansu",
+    primaryTechniques: "Taekwondo / Kyokushin / Military Striking",
+    uniqueSkill: "Taekwondo Killing Rhythm",
+    masteriesAchieved: "Technique, Speed, Endurance",
+    combatPath: "Military Striker Path",
+    masteryTags: ["technique", "speed", "endurance"],
+    evolution: { vb: "Taekwondo student", b: "Tournament striker", i: "Military fighter", a: "Elite combat parent", e: "Kicking master" }
+  },
+  {
+    rank: 56,
+    tier: "Extended Archive · Conviction",
+    name: "Brekdak",
+    aliases: ["Muay Thai Champion", "Vasco's Teacher", "Forbidden Techniques"],
+    faction: "Thailand / Burn Knuckles Mentor",
+    archetypeKey: "conviction-brawler",
+    imageKey: "brekdak",
+    primaryTechniques: "Muay Thai / Clinch / Forbidden Skills",
+    uniqueSkill: "Brekdak Forbidden Techniques",
+    masteriesAchieved: "Strength, Endurance, Technique, Conviction",
+    combatPath: "Muay Thai Mentor Path",
+    masteryTags: ["strength", "endurance", "technique", "conviction"],
+    evolution: { vb: "Muay Thai beginner", b: "Ring fighter", i: "Champion pressure", a: "Forbidden technique mentor", e: "Muay Thai legend" }
+  },
+  {
+    rank: 57,
+    tier: "Extended Archive · Yamazaki",
+    name: "Shintaro Yamazaki",
+    aliases: ["Shingen's Brother", "Yamazaki Executive", "Reverse Eyes"],
+    faction: "Yamazaki Clan",
+    archetypeKey: "ui-copy",
+    imageKey: "shintaro",
+    primaryTechniques: "Yamazaki Kyokushin / Clan Enforcement",
+    uniqueSkill: "Yamazaki Bloodline Pressure",
+    masteriesAchieved: "Technique, Strength, Endurance, UI Lineage",
+    combatPath: "Yamazaki Succession Path",
+    masteryTags: ["ui", "technique", "strength", "endurance"],
+    evolution: { vb: "Clan heir candidate", b: "Kyokushin enforcer", i: "Yamazaki executive", a: "Bloodline pressure", e: "Succession demon" }
+  },
+  {
+    rank: 58,
+    tier: "Extended Archive · Crew",
+    name: "Jaeha Kim",
+    aliases: ["Jaeha Han", "Questism striker", "Gangbuk strategist"],
+    faction: "Questism / Gangbuk",
+    archetypeKey: "striker",
+    imageKey: "jaeha",
+    primaryTechniques: "Taekwondo / Street Strategy",
+    uniqueSkill: "Calculated Kicking Pressure",
+    masteriesAchieved: "Speed, Technique, Strategy",
+    combatPath: "Gangbuk Strategy Path",
+    masteryTags: ["speed", "technique"],
+    evolution: { vb: "Street kicker", b: "Gangbuk crew", i: "Strategy striker", a: "Pressure leader", e: "Calculated striker" }
+  },
+  {
+    rank: 59,
+    tier: "Extended Archive · King Strength",
+    name: "Seokdu Wang",
+    aliases: ["King of Suwon", "Headbutt King", "Suwon King"],
+    faction: "First Generation",
+    archetypeKey: "king-strength",
+    imageKey: "seokdu",
+    primaryTechniques: "Headbutt Brawling / First Gen Power",
+    uniqueSkill: "Suwon Headbutt",
+    masteriesAchieved: "Strength, Endurance, Regional King Hardware",
+    combatPath: "Suwon King Path",
+    masteryTags: ["strength", "endurance", "conviction"],
+    evolution: { vb: "Regional brawler", b: "First Gen challenger", i: "Suwon king", a: "Headbutt specialist", e: "Regional king wall" }
+  },
+  {
+    rank: 60,
+    tier: "Extended Archive · Crew",
+    name: "Hangyeol Baek",
+    aliases: ["Gyeol Baek", "Workers President", "Medical Genius"],
+    faction: "Workers",
+    archetypeKey: "crew",
+    imageKey: "hangyeol",
+    primaryTechniques: "Medical Manipulation / Crew Command",
+    uniqueSkill: "Surgical Control",
+    masteriesAchieved: "Technique, Sense, Crew Authority",
+    combatPath: "Workers Control Path",
+    masteryTags: ["technique", "endurance"],
+    evolution: { vb: "Medical student", b: "Workers operator", i: "Manipulation specialist", a: "Affiliate president", e: "Clinical control threat" }
+  },
+  {
+    rank: 61,
+    tier: "Extended Archive · Speed",
+    name: "Bongae Choi",
+    aliases: ["Choi Bongae", "Pre-Generation Speed", "Lightning Choi"],
+    faction: "Pre-Generation",
+    archetypeKey: "speed-legend",
+    imageKey: "bongae",
+    primaryTechniques: "Speed Striking / Evasive Footwork",
+    uniqueSkill: "Lightning Entry",
+    masteriesAchieved: "Speed, Technique",
+    combatPath: "Pre-Gen Speed Path",
+    masteryTags: ["speed", "technique"],
+    evolution: { vb: "Street runner", b: "Speed fighter", i: "Pre-Gen combatant", a: "Lightning entry", e: "Speed-era veteran" }
+  },
+  {
+    rank: 62,
+    tier: "Extended Archive · Iron Wall",
+    name: "Bakgu Noh",
+    aliases: ["Noh Bakgu", "Pre-Generation Veteran", "Old Guard"],
+    faction: "Pre-Generation",
+    archetypeKey: "iron-boxing",
+    imageKey: "bakgu",
+    primaryTechniques: "Old-School Brawling / Iron Body",
+    uniqueSkill: "Veteran Wall",
+    masteriesAchieved: "Endurance, Strength, Experience",
+    combatPath: "Pre-Gen Veteran Path",
+    masteryTags: ["endurance", "strength", "technique"],
+    evolution: { vb: "Street elder", b: "Old guard brawler", i: "Pre-Gen survivor", a: "Iron-body veteran", e: "Veteran wall" }
+  }
 ];
 
-const roster = PDF_FIGHTER_DATABASE.map((entry) => {
+const CANON_ROSTER_DATABASE = [...PDF_FIGHTER_DATABASE, ...EXTENDED_FIGHTER_DATABASE];
+
+const roster = CANON_ROSTER_DATABASE.map((entry) => {
   const archetype = ARCHETYPES[entry.archetypeKey] || ARCHETYPES.crew;
   const masteries = entry.masteryTags;
   const accent = masteries.includes("speed")
@@ -1281,7 +1451,7 @@ const roster = PDF_FIGHTER_DATABASE.map((entry) => {
           ? MASTERY_META.endurance.color
           : MASTERY_META.conviction.color;
   const alias = entry.aliases[0] || entry.uniqueSkill;
-  const tier = entry.rank <= 10 ? "PDF Top 10" : entry.rank <= 20 ? "PDF Top 20" : "PDF 21-50";
+  const tier = entry.tier || (entry.rank <= 10 ? "PDF Top 10" : entry.rank <= 20 ? "PDF Top 20" : "PDF 21-50");
   const analysis = `${entry.combatPath}: ${entry.primaryTechniques}. Signature lane: ${entry.uniqueSkill}.`;
 
   return {
@@ -5395,7 +5565,18 @@ function renderFighters() {
 function filteredRoster() {
   const query = state.query.trim().toLowerCase();
   if (!query) return roster;
-  return roster.filter((fighter) => fighter.searchText.includes(query));
+  return roster
+    .filter((fighter) => fighter.searchText.includes(query))
+    .sort((a, b) => searchRank(a, query) - searchRank(b, query) || a.rank - b.rank);
+}
+
+function searchRank(fighter, query) {
+  if (fighter.name.toLowerCase() === query) return 0;
+  if (fighter.name.toLowerCase().includes(query)) return 1;
+  if ((fighter.aliases || []).some((alias) => alias.toLowerCase() === query)) return 2;
+  if ((fighter.aliases || []).some((alias) => alias.toLowerCase().includes(query))) return 3;
+  if (fighter.primaryTechniques.toLowerCase().includes(query) || fighter.uniqueSkill.toLowerCase().includes(query)) return 4;
+  return 5;
 }
 
 function renderFighterRow(fighter) {
