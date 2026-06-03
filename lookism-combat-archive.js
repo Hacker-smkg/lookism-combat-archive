@@ -5708,9 +5708,10 @@ function renderMiniFighter(fighter) {
 function renderCharacterImage(fighter, variant = "card") {
   const src = imageFor(fighter);
   const fallback = fighter.name.split(" ").map((part) => part[0]).join("").slice(0, 3);
+  const fetchPriority = variant === "hero" ? "high" : "auto";
   return `
     <span class="character-image character-image--${variant}">
-      ${src ? `<img src="${src}" alt="${escapeHtml(fighter.name)}" loading="${variant === "hero" ? "eager" : "lazy"}" onerror="this.closest('.character-image').classList.add('image-missing'); this.remove()" />` : ""}
+      ${src ? `<img src="${src}" alt="${escapeHtml(fighter.name)}" loading="eager" decoding="async" fetchpriority="${fetchPriority}" onerror="this.closest('.character-image').classList.add('image-missing'); this.remove()" />` : ""}
       <span class="image-fallback">${escapeHtml(fallback)}</span>
     </span>
   `;
