@@ -287,6 +287,42 @@ const IMAGES = {
   jaegyeon: {
     url: "https://static.wikia.nocookie.net/lookism/images/a/ae/Changyeon_Na_%28Cheongliang_Arc%29.jpg/revision/latest?cb=20260209164000",
     source: WIKI_JAEGYEON_URL
+  },
+  samdak: {
+    url: "https://static.wikia.nocookie.net/viral-hit/images/a/a6/Samdak.PNG/revision/latest?cb=20220502051946",
+    source: "https://viral-hit.fandom.com/wiki/Samdak"
+  },
+  langJin: {
+    url: "https://static.wikia.nocookie.net/lookism/images/3/3a/JRW574.png/revision/latest?cb=20260522012837",
+    source: "https://lookism.fandom.com/wiki/Lang_Jin"
+  },
+  changsu: {
+    url: "https://static.wikia.nocookie.net/lookism/images/0/0c/Changsu_Oh%28Current%29.png/revision/latest?cb=20251213090349",
+    source: "https://lookism.fandom.com/wiki/Changsu_Oh"
+  },
+  yugang: {
+    url: "https://static.wikia.nocookie.net/lookism/images/6/6f/Yugang_Ha_2.JPG/revision/latest?cb=20251114011820",
+    source: "https://lookism.fandom.com/wiki/Yugang_Ha"
+  },
+  baekjin: {
+    url: "https://static.wikia.nocookie.net/lookism/images/d/d4/UnknownBusan536.2.png/revision/latest?cb=20250103043807",
+    source: "https://lookism.fandom.com/wiki/Baekjin_Hyeon"
+  },
+  jeongseok: {
+    url: "https://static.wikia.nocookie.net/lookism/images/4/49/UnknownBusan536.1.png/revision/latest?cb=20250103043428",
+    source: "https://lookism.fandom.com/wiki/Jeongseok_Hwang"
+  },
+  lineman: {
+    url: "https://static.wikia.nocookie.net/lookism/images/a/a0/557_lineman_portrait.png/revision/latest?cb=20250605053052",
+    source: "https://lookism.fandom.com/wiki/Lineman"
+  },
+  kazuma: {
+    url: "https://static.wikia.nocookie.net/lookism/images/3/32/Kazuma.jpg/revision/latest?cb=20250102163506",
+    source: "https://lookism.fandom.com/wiki/Sato_Kazuma"
+  },
+  kwakChungHo: {
+    url: "https://static.wikia.nocookie.net/lookism/images/7/73/Chuckkwak.PNG/revision/latest?cb=20220711033134",
+    source: "https://lookism.fandom.com/wiki/Chuck_Kwak"
   }
 };
 
@@ -717,7 +753,7 @@ const PDF_FIGHTER_DATABASE = [
     aliases: ["How to Fight mentor", "Mythology Counter"],
     faction: "PTJ Connected",
     archetypeKey: "striker",
-    imageKey: "",
+    imageKey: "samdak",
     primaryTechniques: "MMA / Counters",
     uniqueSkill: "Mythology Counter",
     masteriesAchieved: "Technique, Counter Mastery",
@@ -731,7 +767,7 @@ const PDF_FIGHTER_DATABASE = [
     aliases: ["Jinrang", "Iron Elbow"],
     faction: "Busan / Conviction Route",
     archetypeKey: "conviction-brawler",
-    imageKey: "",
+    imageKey: "langJin",
     primaryTechniques: "Muay Thai / Brawling",
     uniqueSkill: "Iron Elbow",
     masteriesAchieved: "Conviction / Overcome",
@@ -745,7 +781,7 @@ const PDF_FIGHTER_DATABASE = [
     aliases: ["Money Demon", "Mixed Weaponry"],
     faction: "Pre-Generation",
     archetypeKey: "weapon",
-    imageKey: "",
+    imageKey: "changsu",
     primaryTechniques: "Mixed Weaponry",
     uniqueSkill: "Money Demon",
     masteriesAchieved: "Strength, Endurance, Technique, Speed",
@@ -776,10 +812,10 @@ const PDF_FIGHTER_DATABASE = [
     imageKey: "daniel",
     primaryTechniques: "All Martial Arts",
     uniqueSkill: "Systema / Copy",
-    masteriesAchieved: "Copy, Speed, Technique",
+    masteriesAchieved: "Copy, Speed, Technique, Personal Path",
     combatPath: "Original UI Evolution",
-    masteryTags: ["copy", "ui", "speed", "technique"],
-    evolution: { vb: "Fat Victim", b: "Slim Trainee", i: "Gun's Disciple", a: "First Gen Copy", e: "OG UI State" }
+    masteryTags: ["copy", "ui", "speed", "technique", "path"],
+    evolution: { vb: "Fat Victim", b: "Slim Trainee", i: "Gun's Disciple", a: "First Gen Copy", e: "OG UI State / Own Path" }
   },
   {
     rank: 20,
@@ -1078,10 +1114,10 @@ const PDF_FIGHTER_DATABASE = [
   {
     rank: 41,
     name: "Kwak Chung-ho",
-    aliases: ["Chung-ho Kwak", "Thick Skin"],
+    aliases: ["Chung-ho Kwak", "Kwak Cheongho", "Chuck Kwak", "Thick Skin"],
     faction: "Kwak Family",
     archetypeKey: "wild-wall",
-    imageKey: "",
+    imageKey: "kwakChungHo",
     primaryTechniques: "Brawling",
     uniqueSkill: "Thick Skin",
     masteriesAchieved: "Regional Executive Hardware",
@@ -1123,7 +1159,7 @@ const PDF_FIGHTER_DATABASE = [
     aliases: ["Ha Yugang", "Feint Origin"],
     faction: "Regional Powerhouse",
     archetypeKey: "striker",
-    imageKey: "",
+    imageKey: "yugang",
     primaryTechniques: "MMA",
     uniqueSkill: "Feint Origination",
     masteriesAchieved: "Technique Mastery",
@@ -1137,7 +1173,7 @@ const PDF_FIGHTER_DATABASE = [
     aliases: ["Hyeon Baekjin", "Kinetic Thrust"],
     faction: "Regional Powerhouse",
     archetypeKey: "king-strength",
-    imageKey: "",
+    imageKey: "baekjin",
     primaryTechniques: "Brawling",
     uniqueSkill: "Kinetic Thrust",
     masteriesAchieved: "Single Mastery",
@@ -1151,7 +1187,7 @@ const PDF_FIGHTER_DATABASE = [
     aliases: ["Hwang Jeongseok", "Tactical Defense"],
     faction: "Regional Powerhouse",
     archetypeKey: "iron-boxing",
-    imageKey: "",
+    imageKey: "jeongseok",
     primaryTechniques: "Defensive Boxing",
     uniqueSkill: "Tactical Defense",
     masteriesAchieved: "Single Mastery",
@@ -1165,7 +1201,7 @@ const PDF_FIGHTER_DATABASE = [
     aliases: ["Big Deal Lineman", "Sinu's Protege"],
     faction: "Big Deal",
     archetypeKey: "speed-legend",
-    imageKey: "",
+    imageKey: "lineman",
     primaryTechniques: "Brawling / Agility",
     uniqueSkill: "Lightning Speed",
     masteriesAchieved: "Speed Path",
@@ -1207,7 +1243,7 @@ const PDF_FIGHTER_DATABASE = [
     aliases: ["Sumo Hardware", "Yokozuna Path"],
     faction: "Workers",
     archetypeKey: "wild-wall",
-    imageKey: "",
+    imageKey: "kazuma",
     primaryTechniques: "Sumo",
     uniqueSkill: "Pure Mass",
     masteriesAchieved: "Sumo Hardware",
