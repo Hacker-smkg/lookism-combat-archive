@@ -384,7 +384,17 @@ const LOCAL_IMAGES = {
   paecheon: "./lookism-assets/characters/paecheon.webp",
   bongae: "./lookism-assets/characters/bongae.webp",
   bakgu: "./lookism-assets/characters/bakgu.webp",
-  jaegyeon: "./lookism-assets/characters/jaegyeon.webp"
+  jaegyeon: "./lookism-assets/characters/jaegyeon.webp",
+  samdak: "./lookism-assets/characters/samdak.webp",
+  langJin: "./lookism-assets/characters/lang-jin.webp",
+  changsu: "./lookism-assets/characters/changsu.webp",
+  yuseong: "./lookism-assets/characters/yuseong.webp",
+  kwakChungHo: "./lookism-assets/characters/kwak-chung-ho.webp",
+  yugang: "./lookism-assets/characters/yugang.webp",
+  baekjin: "./lookism-assets/characters/baekjin.webp",
+  jeongseok: "./lookism-assets/characters/jeongseok.webp",
+  lineman: "./lookism-assets/characters/lineman.webp",
+  kazuma: "./lookism-assets/characters/kazuma.webp"
 };
 
 const BACKGROUND_WALL_EXTENSIONS = ["png", "webp", "jpg", "jpeg"];
