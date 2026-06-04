@@ -44,6 +44,10 @@ const IMAGES = {
     url: "https://static.wikia.nocookie.net/lookism/images/c/ce/Daniel-Chapter551.png/revision/latest/scale-to-width-down/420?cb=20260514165743",
     source: "https://lookism.fandom.com/wiki/Daniel_Park/Image_Gallery"
   },
+  ogDaniel: {
+    url: "https://static.wikia.nocookie.net/lookism/images/9/97/Daniel_copying_Taesoo_Ma%27s_Ultimate_Fist_%28Chapter_544%29.png/revision/latest?cb=20250424151244",
+    source: "https://lookism.fandom.com/wiki/Daniel_Park/Image_Gallery"
+  },
   dg: {
     url: "https://static.wikia.nocookie.net/lookism/images/8/82/DG_app_profile.png/revision/latest/scale-to-width-down/320?cb=20251116002314",
     source: "https://lookism.fandom.com/wiki/Diego_Kang"
@@ -331,6 +335,7 @@ const LOCAL_IMAGES = {
   uiDaniel: "./lookism-assets/characters/ui-daniel.webp",
   danielDual: "./lookism-assets/characters/daniel-dual.webp",
   pathDaniel: "./lookism-assets/characters/daniel-path.webp",
+  ogDaniel: "./lookism-assets/characters/og-daniel.webp",
   shingen: "./lookism-assets/characters/shingen.webp",
   mujin: "./lookism-assets/characters/mujin.webp",
   james: "./lookism-assets/characters/james.webp",
@@ -819,7 +824,7 @@ const PDF_FIGHTER_DATABASE = [
     aliases: ["Original Daniel", "Little Daniel", "Daniel Park"],
     faction: "J-High Allied",
     archetypeKey: "ui-copy",
-    imageKey: "pathDaniel",
+    imageKey: "ogDaniel",
     primaryTechniques: "All Martial Arts",
     uniqueSkill: "Systema / Copy",
     masteriesAchieved: "Copy, Speed, Technique, Personal Path",
