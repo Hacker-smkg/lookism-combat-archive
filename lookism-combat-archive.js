@@ -819,7 +819,7 @@ const PDF_FIGHTER_DATABASE = [
     aliases: ["Original Daniel", "Little Daniel", "Daniel Park"],
     faction: "J-High Allied",
     archetypeKey: "ui-copy",
-    imageKey: "daniel",
+    imageKey: "pathDaniel",
     primaryTechniques: "All Martial Arts",
     uniqueSkill: "Systema / Copy",
     masteriesAchieved: "Copy, Speed, Technique, Personal Path",
