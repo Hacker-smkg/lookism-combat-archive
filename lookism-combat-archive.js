@@ -45,7 +45,7 @@ const IMAGES = {
     source: "https://lookism.fandom.com/wiki/Daniel_Park/Image_Gallery"
   },
   ogDaniel: {
-    url: "https://static.wikia.nocookie.net/lookism/images/9/97/Daniel_copying_Taesoo_Ma%27s_Ultimate_Fist_%28Chapter_544%29.png/revision/latest?cb=20250424151244",
+    url: "https://static.wikia.nocookie.net/lookism/images/0/01/Daniel_Park_Path.png/revision/latest?cb=20250806171643",
     source: "https://lookism.fandom.com/wiki/Daniel_Park/Image_Gallery"
   },
   dg: {
