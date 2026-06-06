@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </Link>
         <nav className="nav" aria-label="Primary">
           {navItems.map(([href, label]) => (
-            <Link key={href} href={href} style={{ borderColor: pathname === href ? "var(--blue)" : undefined, color: pathname === href ? "#fff" : undefined }}>
+            <Link key={href} href={href} className={pathname === href ? "active" : undefined}>
               {label}
             </Link>
           ))}
