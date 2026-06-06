@@ -1,0 +1,31 @@
+import { expect, test } from "@playwright/test";
+
+test("guest awakening diagnosis dashboard training reports profile flow", async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/login$/);
+  await page.getByRole("button", { name: /continue as guest/i }).click();
+  await expect(page).toHaveURL(/\/awakening$/);
+  await page.getByRole("link", { name: /accept system/i }).click();
+  await expect(page).toHaveURL(/\/diagnosis$/);
+  await page.getByRole("spinbutton", { name: "Age", exact: true }).fill("25");
+  await page.getByLabel("Height (cm)").fill("175");
+  await page.getByLabel("Weight (kg)").fill("90");
+  await page.getByRole("button", { name: /analyze offline/i }).click();
+  await expect(page.getByText(/Weak Daniel|Civilian Reset|Fighter/)).toBeVisible();
+  await expect(page.locator('main a[href="/system"]')).toBeVisible();
+  await page.goto("/system");
+  await expect(page).toHaveURL(/\/system$/);
+  await expect(page.getByText(/Today’s Quests/i)).toBeVisible();
+  await page.getByRole("button", { name: /complete/i }).first().click();
+  await expect(page.getByRole("button", { name: /undo last quest/i })).toBeEnabled();
+  await page.goto("/train");
+  await expect(page).toHaveURL(/\/train$/);
+  await expect(page.getByText("Training Hub")).toBeVisible();
+  await page.goto("/reports");
+  await expect(page).toHaveURL(/\/reports$/);
+  await expect(page.getByText("Progress Reports")).toBeVisible();
+  await page.goto("/profile");
+  await expect(page).toHaveURL(/\/profile$/);
+  await expect(page.getByText(/System Assistant/i)).toBeVisible();
+});
