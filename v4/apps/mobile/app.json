@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Lookism System V4",
+    "slug": "lookism-system-v4",
+    "scheme": "lookism-system",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "android": {
+      "package": "com.hackersmkg.lookismsystemv4",
+      "adaptiveIcon": {
+        "backgroundColor": "#030507"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-sqlite"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
