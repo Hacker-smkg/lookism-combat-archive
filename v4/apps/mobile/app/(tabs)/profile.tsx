@@ -1,21 +1,59 @@
 import { Link } from "expo-router";
-import { Pressable, Text } from "react-native";
-import { BodyText, DisplayText, Panel, SystemScroll, mobileColors } from "../../components/system-view";
+import { BodyText, Chip, DisplayText, Panel, SystemButton, SystemScroll } from "../../components/system-view";
 import { useMobileSystemStore } from "../../lib/mobile-store";
 
 export default function ProfileTab() {
-  const { profile, analysis, progress } = useMobileSystemStore((state) => state);
+  const {
+    profile,
+    analysis,
+    progress,
+    cloudStatus,
+    cloudMessage,
+    userEmail,
+    guestMode,
+    syncToCloud,
+    restoreCloudState,
+    signOut
+  } = useMobileSystemStore((state) => state);
+
   return (
     <SystemScroll>
-      <Panel title="Profile">
-        <DisplayText>File</DisplayText>
-        <BodyText muted>Guest state is stored locally with Expo SQLite localStorage polyfill. Secure session values use SecureStore in the auth adapter phase.</BodyText>
+      <Panel title="Account File" tone="blue">
+        <DisplayText size={38}>File</DisplayText>
         <BodyText>Lv {progress.level} · {analysis?.currentCategory ?? "No diagnosis"}</BodyText>
-        <BodyText muted>{JSON.stringify(profile)}</BodyText>
+        <Chip tone={cloudStatus === "error" ? "red" : cloudStatus === "signed-in" ? "green" : guestMode ? "red" : "blue"}>{userEmail ?? cloudStatus}</Chip>
+        <BodyText muted>{cloudMessage}</BodyText>
+      </Panel>
+
+      <Panel title="Cloud Save" tone="purple">
+        {userEmail ? (
+          <>
+            <SystemButton tone="green" onPress={() => void syncToCloud()}>Sync To Cloud</SystemButton>
+            <SystemButton tone="blue" onPress={() => void restoreCloudState()}>Restore Cloud Save</SystemButton>
+            <SystemButton tone="red" onPress={() => void signOut()}>Sign Out</SystemButton>
+          </>
+        ) : (
+          <>
+            <BodyText muted>Sign in to sync progress across devices. Guest mode remains usable without cloud.</BodyText>
+            <Link href="/login" asChild>
+              <SystemButton tone="blue">Open Login</SystemButton>
+            </Link>
+          </>
+        )}
+      </Panel>
+
+      <Panel title="Diagnosis Snapshot" tone="gold">
+        <BodyText muted>{JSON.stringify(profile, null, 2)}</BodyText>
+        <BodyText>{analysis ? `${analysis.recommendedMastery} · ${analysis.recommendedFighterType} · ${analysis.recommendedArt}` : "Run diagnosis to unlock recommended path."}</BodyText>
+        <Link href="/diagnosis" asChild>
+          <SystemButton tone="purple">Update Diagnosis</SystemButton>
+        </Link>
+      </Panel>
+
+      <Panel title="System Assistant" tone="green">
+        <BodyText muted>Ask for condition, today’s quest, recovery, diet basics, motivation, or next-rank blockers.</BodyText>
         <Link href="/chat" asChild>
-          <Pressable style={{ borderColor: mobileColors.purple, borderWidth: 1, padding: 14 }}>
-            <Text selectable style={{ color: mobileColors.text, textAlign: "center" }}>OPEN SYSTEM ASSISTANT</Text>
-          </Pressable>
+          <SystemButton tone="green">Open Assistant</SystemButton>
         </Link>
       </Panel>
     </SystemScroll>

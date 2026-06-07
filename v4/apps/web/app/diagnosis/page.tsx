@@ -11,7 +11,7 @@ export default function DiagnosisPage() {
   const runDiagnosis = useSystemStore((state) => state.runDiagnosis);
   const analysis = useSystemStore((state) => state.analysis);
   const form = useForm<ProfileInputModel>({
-    resolver: zodResolver(profileInputSchema),
+    resolver: zodResolver(profileInputSchema as never),
     defaultValues: { daysPerWeek: 3, sessionMinutes: 45, goal: "general" }
   });
 

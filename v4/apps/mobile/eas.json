@@ -1,0 +1,42 @@
+{
+  "cli": {
+    "version": ">= 16.0.1",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ireoyoymzqbzrtmlhknr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_RYdERp5DyDwDdbwUSX_DqA_XSQcfljP",
+        "EXPO_PUBLIC_COACH_API_URL": "https://lookism-vercel.vercel.app/api/coach"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ireoyoymzqbzrtmlhknr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_RYdERp5DyDwDdbwUSX_DqA_XSQcfljP",
+        "EXPO_PUBLIC_COACH_API_URL": "https://lookism-vercel.vercel.app/api/coach"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://ireoyoymzqbzrtmlhknr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_RYdERp5DyDwDdbwUSX_DqA_XSQcfljP",
+        "EXPO_PUBLIC_COACH_API_URL": "https://lookism-vercel.vercel.app/api/coach"
+      }
+    }
+  }
+}

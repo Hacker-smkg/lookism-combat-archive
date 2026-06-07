@@ -9,8 +9,9 @@
     "newArchEnabled": true,
     "android": {
       "package": "com.hackersmkg.lookismsystemv4",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#030507"
+        "backgroundColor": "#030304"
       }
     },
     "plugins": [
@@ -20,6 +21,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4ca33b28-8d6a-4cc1-8e00-8ca7c6e448d2"
+      }
+    },
+    "owner": "smkg01"
   }
 }

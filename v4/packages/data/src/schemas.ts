@@ -116,3 +116,4 @@ export type DiagnosisResultModel = z.infer<typeof diagnosisResultSchema>;
 export type JourneyPlanModel = z.infer<typeof journeyPlanSchema>;
 export type ProgressStateModel = z.infer<typeof progressStateSchema>;
 export type UserSettingsModel = z.infer<typeof userSettingsSchema>;
+export type CoachMessage = z.infer<typeof coachMessageSchema>;
